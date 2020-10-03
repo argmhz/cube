@@ -160,7 +160,7 @@ class Cube {
     void plane(uint8_t axis,uint8_t index,uint8_t r,uint8_t g,uint8_t b);
   	void line(uint8_t x1,uint8_t y1,uint8_t z1,uint8_t x2,uint8_t y2,uint8_t z2,uint8_t r,uint8_t g,uint8_t b);
   	void shift(uint8_t axis,uint8_t direction);
-    // rotate
+    void rotate(double pitch,double roll,double yaw);
 
   private:
     void createFrame(){

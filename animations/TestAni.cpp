@@ -9,8 +9,8 @@ class Test : public Animation {
         for (size_t x = 0; x < 8; x++) {
           for (size_t z = 0; z < 8; z++) {
               c->set(z,x,y,0,15,0);
-               Cube::Color a = c->get(z,x,y);
-                std::cout << a.red << " " << a.green << " " << a.blue << std::endl;
+               // Cube::Color a = c->get(z,x,y);
+               //  std::cout << a.red << " " << a.green << " " << a.blue << std::endl;
           }
         }
       }
