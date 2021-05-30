@@ -5,53 +5,31 @@
 #include <vector>
 
 class Test : public Animation {
+
+    int time = 50000;
+
     void draw(Cube *c) {
+      c->clear();
+      c->update();
+      sleep(1);
 
-      int i = 0;
+      c->plane(AXIS_X,7,0,15,0);
+      c->update();
+      // usleep(time);
+      usleep(time);
+      for (size_t t = 0; t < 5; t++) {
 
-      for (size_t e = 0; e < 3; e++) {
-        for ( i = 0; i < 16; i++) {
-          drawfull(c,i,0,0);
+        for (size_t i = 0; i < 7; i++) {
+          c->shift(AXIS_X,-1);
           c->update();
-          usleep(60000);
+          usleep(time);
+        }
+        for (size_t i = 0; i < 7; i++) {
+          c->shift(AXIS_X,1);
+          c->update();
+          usleep(time);
         }
 
-        sleep(1);
-
-        for ( i = 15; i >= 0; i--) {
-          drawfull(c,i,0,0);
-          c->update();
-          usleep(60000);
-
-        }
-
-        for ( i = 0; i < 16; i++) {
-          drawfull(c,0,i,0);
-          c->update();
-          usleep(60000);
-        }
-
-        sleep(1);
-
-        for ( i = 15; i >= 0; i--) {
-          drawfull(c,0,i,0);
-          c->update();
-          usleep(60000);
-        }
-
-        for ( i = 0; i < 16; i++) {
-          drawfull(c,0,0,i);
-          c->update();
-          usleep(60000);
-        }
-
-        sleep(1);
-
-        for ( i = 15; i >= 0; i--) {
-          drawfull(c,0,0,i);
-          c->update();
-          usleep(60000);
-        }
       }
 
       c->clear();
@@ -59,15 +37,6 @@ class Test : public Animation {
       c->stop();
     }
 
-    void drawfull(Cube *c ,int r,int g,int b){
-      for (size_t y = 0; y < 8; y++) {
-        for (size_t x = 0; x < 8; x++) {
-          for (size_t z = 0; z < 8; z++) {
-            c->set(x,y,z,r,g,b);
-          }
-        }
-      }
-    }
 
     void onDataUpdate(std::vector<std::string> data){
 

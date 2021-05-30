@@ -5,6 +5,7 @@
 #include <vector>
 
 class Test : public Animation {
+  
     void draw(Cube *c) {
 
       int i = 0;

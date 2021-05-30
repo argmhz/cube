@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include "Animation.hpp"
 #include <time.h>
+#include <chrono>
 
 #define AXIS_X 1
 #define AXIS_Y 2
@@ -105,6 +106,13 @@ class Cube {
       Color c;
       int index = (z*8+x)*3;
 
+      if(index >= 192){
+        index = 191;
+      }
+      if(index < 0){
+        index = 0;
+      }
+
       c.red = (int)frontBuffer[y][tr[index]].to_ulong();
       c.green = (int)frontBuffer[y][tr[index+1]].to_ulong();
       c.blue = (int)frontBuffer[y][tr[index+2]].to_ulong();
@@ -116,7 +124,7 @@ class Cube {
     }
 
     void run(){
-      off();
+
       while (isRunning) {
 
         if(bam_counter == 1 || bam_counter == 3 || bam_counter == 7){
@@ -125,9 +133,10 @@ class Cube {
 
         bam_counter++;
         for (size_t layer = 0; layer < 8; layer++) {
+          before();
           bcm2835_spi_transfer(layers[layer]);
           bcm2835_spi_transfernb(engine[layer][bam_bit],r_engine,24);
-          latch();
+          after();
         }
 
         if(bam_counter == 15){
@@ -205,7 +214,7 @@ class Cube {
     void clear(int x,int y,int z){
 		    set(x,y,z,0,0,0);
 	  }
-    
+
     int roundClostest(int numerator, int denominator) {
   	  	numerator = (numerator << 1)/denominator;
   	  	int output = (numerator>>1) + (numerator % 2);
@@ -244,19 +253,38 @@ class Cube {
       }
 
       bcm2835_gpio_fsel(RPI_GPIO_P1_11, BCM2835_GPIO_FSEL_OUTP);
-      bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_32);
-
+      bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
+      bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_16);
+      enable();
       return true;
     }
 
-    void off(){
-    	bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
+    void disable(){
+      bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
     }
 
+    void enable(){
+      bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
+    }
+
+    void off(){
+      disable();
+      // bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
+      // bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
+    }
+
+    void before(){
+      off();
+    }
+    void after(){
+      enable();
+      latch();
+    }
     void latch(){
     	bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
       usleep(1);
-    	bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
+      bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
+      // enable();
     }
 
 };

@@ -1,6 +1,5 @@
 #include "Cube.h"
 
-
 void Cube::plane(int axis,int index,int r,int g,int b){
   switch(axis){
     case AXIS_X:
