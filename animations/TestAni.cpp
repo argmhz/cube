@@ -16,7 +16,7 @@ class Test : public Animation {
       c->plane(AXIS_X,7,0,15,0);
       c->update();
       // usleep(time);
-      usleep(time);
+      sleep(10);
       for (size_t t = 0; t < 5; t++) {
 
         for (size_t i = 0; i < 7; i++) {
