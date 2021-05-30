@@ -9,7 +9,7 @@ public:
   Animation() {}
   ~Animation(){}
   virtual void draw(Cube *c)=0;
-  virtual void onDataUpdate(std::vector<std::string> data)=0;
+  // virtual void onDataUpdate(std::vector<std::string> data)=0;
 };
 
 typedef Animation* create_t();
