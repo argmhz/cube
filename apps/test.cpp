@@ -33,7 +33,6 @@ void animationChanger(Cube *c){
     usleep(100000);
   }
 
-
 }
 
 int main(int argc, char *argv[]){
