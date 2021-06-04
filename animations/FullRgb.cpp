@@ -1,38 +1,37 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <vector>
 
 class Test : public Animation {
-  
+
     void draw(Cube *c) {
 
       int i = 0;
 
-      for (size_t e = 0; e < 3; e++) {
-        for ( i = 0; i < 16; i++) {
-          drawfull(c,i,0,0);
-          c->update();
-          usleep(60000);
-        }
+        while(isRunning()) {
+          for ( i = 0; i < 16; i++) {
+            drawfull(c,i,0,0);
+            c->update();
+            usleep(60000);
+          }
 
-        sleep(1);
+          sleep(1);
 
-        for ( i = 15; i >= 0; i--) {
-          drawfull(c,i,0,0);
-          c->update();
-          usleep(60000);
+          for ( i = 15; i >= 0; i--) {
+            drawfull(c,i,0,0);
+            c->update();
+            usleep(60000);
+          }
 
-        }
+          for ( i = 0; i < 16; i++) {
+            drawfull(c,0,i,0);
+            c->update();
+            usleep(60000);
+          }
 
-        for ( i = 0; i < 16; i++) {
-          drawfull(c,0,i,0);
-          c->update();
-          usleep(60000);
-        }
-
-        sleep(1);
+          sleep(1);
 
         for ( i = 15; i >= 0; i--) {
           drawfull(c,0,i,0);
@@ -56,8 +55,6 @@ class Test : public Animation {
       }
 
       c->clear();
-      c->update();
-      c->stop();
     }
 
     void drawfull(Cube *c ,int r,int g,int b){

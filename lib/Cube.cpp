@@ -1,4 +1,5 @@
 #include "Cube.h"
+#include <math.h>
 
 void Cube::plane(int axis,int index,int r,int g,int b){
   switch(axis){
@@ -25,6 +26,70 @@ void Cube::plane(int axis,int index,int r,int g,int b){
     break;
    }
 }
+
+void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
+
+	    // Iterate through phi, theta then convert r,theta,phi to  XYZ
+    for (double phi = 0.; phi < 2*M_PI; phi += M_PI/10.) // Azimuth [0, M_2PI]
+    {
+        for (double theta = 0.; theta < M_PI; theta += M_PI/10.) // Elevation [0, M_PI]
+        {
+            set(round(radius * cos(phi) * sin(theta) + x),round(radius * sin(phi) * sin(theta) + y),round(radius * cos(theta) + z),r,g,b);
+        }
+    }
+
+}
+// void Cube::shiftPlane(int axis,int index,int direction){
+//
+// 	int _z,_y,__z,__y;
+//
+// 		for(int z=0;z<8;z++){
+// 			for(int y=0;y<8;y++){
+//
+// 				if(direction == -1){
+// 					_z = z;
+// 					__z = z+1;
+// 				} else {
+// 					_z = abs(z-7);
+// 					__z = _z-1;
+// 				}
+//
+// 				switch(axis){
+// 				case AXIS_X:
+// 					if(inRange(index,y,__z)){
+// 						set(index,y,_z,get(index,y,__z));
+// 					}
+// 					else
+// 					{
+// 						clear(index,y,_z);
+// 					}
+// 				break;
+//
+// 				case AXIS_Y:
+// 					if(inRange(__z,index,y)){
+// 						set(_z,index,y,get(__z,index,y));
+// 					}
+// 					else
+// 					{
+// 						clear(_z,index,y);
+// 					}
+// 				break;
+// 				case AXIS_Z:
+// 					if(inRange(__z,y,index)){
+// 						set(_z,y,index,get(__z,y,index));
+// 					}
+// 					else
+// 					{
+// 						clear(_z,y,index);
+// 					}
+// 				break;
+// 				}
+//
+// 			}
+// 		}
+//
+// }
+
 
 void Cube::line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b){
   bool reverseX = false;
@@ -135,3 +200,36 @@ void Cube::shift(int axis,int direction){
     }
 
 }
+
+// // rotate(pitch, roll, yaw) {
+//     var cosa = Math.cos(yaw);
+//     var sina = Math.sin(yaw);
+//
+//     var cosb = Math.cos(pitch);
+//     var sinb = Math.sin(pitch);
+//
+//     var cosc = Math.cos(roll);
+//     var sinc = Math.sin(roll);
+//
+//     var Axx = cosa*cosb;
+//     var Axy = cosa*sinb*sinc - sina*cosc;
+//     var Axz = cosa*sinb*cosc + sina*sinc;
+//
+//     var Ayx = sina*cosb;
+//     var Ayy = sina*sinb*sinc + cosa*cosc;
+//     var Ayz = sina*sinb*cosc - cosa*sinc;
+//
+//     var Azx = -sinb;
+//     var Azy = cosb*sinc;
+//     var Azz = cosb*cosc;
+//
+//     for (var i = 0; i < points.length; i++) {
+//         var px = points[i].x;
+//         var py = points[i].y;
+//         var pz = points[i].z;
+//
+//         points[i].x = Axx*px + Axy*py + Axz*pz;
+//         points[i].y = Ayx*px + Ayy*py + Ayz*pz;
+//         points[i].z = Azx*px + Azy*py + Azz*pz;
+//     }
+// }

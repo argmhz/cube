@@ -1,6 +1,6 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
-#include "../helpers.h"
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
+#include "../lib/helpers.h"
 
 
 class Wipeout : public Animation {
@@ -9,7 +9,7 @@ class Wipeout : public Animation {
 
 
   void draw(Cube *c) {
-    
+
     int xxx=0, yyy=0, zzz=0;
   int fx=random(8), fy=random(8), fz=random(8), direct, fxm=1, fym=1, fzm=1, fxo=0, fyo=0, fzo=0;
   int  ftx=random(8), fty=random(8), ftz=random(8), ftxm=1, ftym=1, ftzm=1, ftxo=0, ftyo=0, ftzo=0;
@@ -44,9 +44,9 @@ class Wipeout : public Animation {
       rrt=0;
       ggt=random(15);
       bbt=random(15);}
-        start=millis();
 
-  while(millis()-start<10000){
+
+  while(isRunning()){
     // std::cout << random(3) << std::endl;
     //fx=random(8); fy=random(8); fz=random(8);
 
@@ -136,15 +136,12 @@ class Wipeout : public Animation {
 
 
   c->clear();
-   c->update();
-   c->stop();
-
 
   }
 
-  void onDataUpdate(std::vector<std::string> data){
-
-  }
+  // void onDataUpdate(std::vector<std::string> data){
+  //
+  // }
 };
 
 extern "C" Animation * create() {

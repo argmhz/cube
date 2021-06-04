@@ -1,15 +1,16 @@
 #pragma once
 
 #include <bcm2835.h>
-#include <cstdint>
+// #include <cstdint>
 #include <iostream>
-#include <dlfcn.h>
+
 #include <bitset>
 #include <unistd.h>
-#include <sys/time.h>
+// #include <sys/time.h>
 #include "Animation.hpp"
 #include <time.h>
-#include <chrono>
+// #include <chrono>
+#include <thread>
 
 #define AXIS_X 1
 #define AXIS_Y 2
@@ -19,9 +20,9 @@
 
 class Cube {
   private:
-   class Animation *animation;
 
-   bool isRunning = true;
+
+   bool running = true;
 
    int bam_counter = 0;
    int bam_bit = 0;
@@ -72,7 +73,11 @@ class Cube {
       bcm2835_spi_end();
       bcm2835_close();
 
-      delete animation;
+
+    }
+
+    bool isRunning(){
+      return running;
     }
 
     void clear() {
@@ -82,6 +87,13 @@ class Cube {
         }
       }
     }
+
+    bool isOff(int x,int y,int z){
+      Color c = get(x,y,z);
+      return (c.red == 0 && c.green == 0 && c.blue == 0);
+    }
+
+
 
     bool inBounce(int x,int y,int z){
         return ((x < 8 && x >= 0) && (y < 8 && y >= 0) && (z < 8 && z >= 0 ));
@@ -125,7 +137,7 @@ class Cube {
 
     void run(){
 
-      while (isRunning) {
+      while (running) {
 
         if(bam_counter == 1 || bam_counter == 3 || bam_counter == 7){
           bam_bit++;
@@ -133,10 +145,20 @@ class Cube {
 
         bam_counter++;
         for (size_t layer = 0; layer < 8; layer++) {
-          before();
+          // disable shift registers
+          bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
+          // transfer layer select byte
           bcm2835_spi_transfer(layers[layer]);
+          // transfer layer data
           bcm2835_spi_transfernb(engine[layer][bam_bit],r_engine,24);
-          after();
+          // enable shift registers
+          bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
+
+          // latch pin
+          bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
+          usleep(1);
+          bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
+
         }
 
         if(bam_counter == 15){
@@ -147,8 +169,6 @@ class Cube {
       }
       clear();
       update();
-      off();
-
     }
 
     void setDirect(int layer, int pos){
@@ -159,48 +179,16 @@ class Cube {
       frontBuffer[layer][tr[pos]] = value;
     }
 
-    void loadAnimation(char const* name) {
-
-      void* TestAnimation = dlopen(name, RTLD_NOW);
-
-      if (!TestAnimation) {
-            std::cerr << "Cannot open library: " << dlerror() << '\n';
-            return;
-      }
-
-      dlerror();
-
-      create_t* create_animation = (create_t*) dlsym(TestAnimation, "create");
-      const char* dlsym_error = dlerror();
-
-      if (dlsym_error) {
-           std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
-           return;
-       }
-
-      destroy_t* destroy_animation = (destroy_t*) dlsym(TestAnimation, "destroy");
-
-      dlsym_error = dlerror();
-
-      if (dlsym_error) {
-         std::cerr << "Cannot load symbol destroy: " << dlsym_error << '\n';
-         return;
-      }
-
-      if(animation){
-        destroy_animation(animation);
-      }
-
-      animation = (Animation*)create_animation();
-    }
-
     void stop(){
-      isRunning = false;
+      running = false;
     }
 
-    void start(){
-      isRunning = true;
-      animation->draw(this);
+    std::thread start(){
+      running = true;
+      std::thread cubeThread([this] {
+        this->run();
+      });
+      return cubeThread;
     }
 
     void plane(int axis,int index,int r,int g,int b);
@@ -224,6 +212,7 @@ class Cube {
   	void line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b);
   	void shift(int axis,int direction);
     void rotate(double pitch,double roll,double yaw);
+    void sphere(int x,int y,int z,int radius,int r, int g,int b);
     void all(int r, int g,int b);
   private:
     void createFrame(){
@@ -240,6 +229,8 @@ class Cube {
       }
     }
 
+
+
     bool initBcm2835(){
 
       if (!bcm2835_init()) {
@@ -255,70 +246,8 @@ class Cube {
       bcm2835_gpio_fsel(RPI_GPIO_P1_11, BCM2835_GPIO_FSEL_OUTP);
       bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
       bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_16);
-      enable();
+
       return true;
     }
 
-    void disable(){
-      bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
-    }
-
-    void enable(){
-      bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
-    }
-
-    void off(){
-      disable();
-      // bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
-      // bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
-    }
-
-    void before(){
-      off();
-    }
-    void after(){
-      enable();
-      latch();
-    }
-    void latch(){
-    	bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
-      usleep(1);
-      bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
-      // enable();
-    }
-
 };
-
-
-// // rotate(pitch, roll, yaw) {
-//     var cosa = Math.cos(yaw);
-//     var sina = Math.sin(yaw);
-//
-//     var cosb = Math.cos(pitch);
-//     var sinb = Math.sin(pitch);
-//
-//     var cosc = Math.cos(roll);
-//     var sinc = Math.sin(roll);
-//
-//     var Axx = cosa*cosb;
-//     var Axy = cosa*sinb*sinc - sina*cosc;
-//     var Axz = cosa*sinb*cosc + sina*sinc;
-//
-//     var Ayx = sina*cosb;
-//     var Ayy = sina*sinb*sinc + cosa*cosc;
-//     var Ayz = sina*sinb*cosc - cosa*sinc;
-//
-//     var Azx = -sinb;
-//     var Azy = cosb*sinc;
-//     var Azz = cosb*cosc;
-//
-//     for (var i = 0; i < points.length; i++) {
-//         var px = points[i].x;
-//         var py = points[i].y;
-//         var pz = points[i].z;
-//
-//         points[i].x = Axx*px + Axy*py + Axz*pz;
-//         points[i].y = Ayx*px + Ayy*py + Ayz*pz;
-//         points[i].z = Azx*px + Azy*py + Azz*pz;
-//     }
-// }

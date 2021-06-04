@@ -1,14 +1,8 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
-#include "../helpers.h"
-// #include <stdio.h>
-// #include <ctime>
-// #include <stdlib.h>     /* srand, rand */
-// #include <time.h>
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
+#include "../lib/helpers.h"
 
 class BouncyvTwo : public Animation {
-
-  unsigned long start;
 
   void draw(Cube *c){
 
@@ -29,9 +23,7 @@ class BouncyvTwo : public Animation {
 
       }
 
-         start=millis();
-
-     while(1){
+     while(isRunning()){
        direct = random(3);
 
     for(addr=1; addr<ledcount+1; addr++){
@@ -132,6 +124,8 @@ class BouncyvTwo : public Animation {
 
      }//while
 
+     c->clear();
+     // c->update();
   }
 
 };

@@ -1,13 +1,12 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
-#include "../helpers.h"
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
+#include "../lib/helpers.h"
 
 
 class SinewaveTwo : public Animation {
 
   void draw(Cube *c) {
 
-    sleep(1);
     int sinewavearray[8], addr, sinemult[8], colselect, rr=0, gg=0, bb=15, addrt;
     int sinewavearrayOLD[8], select, subZ=-7, subT=7, multi=0;//random(-1, 2);
     sinewavearray[0]=0;
@@ -27,7 +26,7 @@ class SinewaveTwo : public Animation {
       sinewavearray[7]=7;
     sinemult[7]=1;
 
-while(1){
+while(isRunning()){
   for(addr=0; addr<8; addr++){
     if(sinewavearray[addr]==7){
     sinemult[addr]=-1;
@@ -115,7 +114,7 @@ multi=1;
 
 
 }//while
-
+  c->clear();
 
   }
 };

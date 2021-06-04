@@ -1,6 +1,6 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
-#include "../helpers.h"
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
+#include "../lib/helpers.h"
 // #include <stdio.h>
 // #include <ctime>
 // #include <stdlib.h>     /* srand, rand */
@@ -34,25 +34,27 @@ class Folder : public Animation {
   }
 
 
-
-  start=millis();
-  while(millis()-start<10000){
+  while(isRunning()){
     if(top==1){
       if(side==0){
    //top to left-side
-  for(yy=0; yy<8; yy++){
-  for(xx=0; xx<8; xx++){
-  c->set(7-LED_Old[yy], yy-oldpullback[yy],xx , 0, 0, 0);
-  c->set(7-folderaddr[yy], yy-pullback[yy],xx , ranx, rany, ranz);
-  }}}
-    if(side==2){
+        for(yy=0; yy<8; yy++){
+          for(xx=0; xx<8; xx++){
+            c->set(7-LED_Old[yy], yy-oldpullback[yy],xx , 0, 0, 0);
+            c->set(7-folderaddr[yy], yy-pullback[yy],xx , ranx, rany, ranz);
+          }
+        }
+      }
+      if(side==2){
       //top to back-side
-  for(yy=0; yy<8; yy++){
-  for(xx=0; xx<8; xx++){
-  c->set(7-LED_Old[yy], xx, yy-oldpullback[yy], 0, 0, 0);
-  c->set(7-folderaddr[yy], xx, yy-pullback[yy], ranx, rany, ranz);
-  }}}
-  if(side==3){
+        for(yy=0; yy<8; yy++){
+          for(xx=0; xx<8; xx++){
+            c->set(7-LED_Old[yy], xx, yy-oldpullback[yy], 0, 0, 0);
+            c->set(7-folderaddr[yy], xx, yy-pullback[yy], ranx, rany, ranz);
+          }
+        }
+      }
+      if(side==3){
       //top-side to front-side
   for(yy=0; yy<8; yy++){
   for(xx=0; xx<8; xx++){
@@ -460,12 +462,13 @@ if(side==0){
 
 }//while
 
+  c->clear();
 }
 
 
-    void onDataUpdate(std::vector<std::string> data){
-
-    }
+    // void onDataUpdate(std::vector<std::string> data){
+    //
+    // }
 };
 
 

@@ -1,14 +1,14 @@
-#include "../Cube.cpp"
-#include "../Animation.hpp"
-#include "../helpers.h"
+#include "../lib/Cube.cpp"
+#include "../lib/Animation.hpp"
+#include "../lib/helpers.h"
 
 
 class Allan : public Animation {
 
   void draw(Cube *c) {
-    sleep(1);
+
     int r,g,b;
-    while(1){
+    while(isRunning()){
       for (size_t x = 0; x < 8; x++) {
         for (size_t y = 0; y < 8; y++) {
           for (size_t z = 0; z < 8; z++) {
@@ -23,12 +23,12 @@ class Allan : public Animation {
         c->clear();
     }
 
-
+    c->clear();
   }
 
-  void onDataUpdate(std::vector<std::string> data){
-
-  }
+  // void onDataUpdate(std::vector<std::string> data){
+  //
+  // }
 };
 extern "C" Animation * create() {
     return new Allan;
