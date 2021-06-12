@@ -13,7 +13,7 @@ public:
   virtual void draw(Cube *c)=0;
 
   int getDuration(){
-    return 2;
+    return 30;
   }
 
   void stop(){
