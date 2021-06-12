@@ -22,7 +22,7 @@ class Dna : public Animation {
         _y = sin( t + M_PI );
         xx = round( dmap( _x, -1, 1, 1, 6 ) );
         yy = round( dmap( _y, -1, 1, 1, 6 ) );
-
+        
         c->line( x, 0,y, xx,  0,yy, 0,0,15);
         c->set( x,  0,y, 0,15,0 );
         c->set( xx,  0,yy, 15,0,0);
@@ -34,7 +34,7 @@ class Dna : public Animation {
         }
 
         c->update();
-        usleep(100);
+        usleep(70000);
     }
 
         c->clear();

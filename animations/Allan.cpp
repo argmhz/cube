@@ -2,7 +2,6 @@
 #include "../lib/Animation.hpp"
 #include "../lib/helpers.h"
 
-
 class Allan : public Animation {
 
   void draw(Cube *c) {
