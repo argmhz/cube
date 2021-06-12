@@ -1,22 +1,17 @@
 #pragma once
 
 #include <bcm2835.h>
-// #include <cstdint>
 #include <iostream>
-
 #include <bitset>
 #include <unistd.h>
-// #include <sys/time.h>
-#include "Animation.hpp"
-#include <time.h>
-// #include <chrono>
 #include <thread>
 
 #define AXIS_X 1
 #define AXIS_Y 2
 #define AXIS_Z 3
 
-
+#define MAX_COLOR 15
+#define MIN_COLOR 0
 
 class Cube {
   private:
@@ -93,8 +88,6 @@ class Cube {
       return (c.red == 0 && c.green == 0 && c.blue == 0);
     }
 
-
-
     bool inBounce(int x,int y,int z){
         return ((x < 8 && x >= 0) && (y < 8 && y >= 0) && (z < 8 && z >= 0 ));
     }
@@ -109,25 +102,21 @@ class Cube {
     }
 
     struct Color{
-      int red;
-      int green;
-      int blue;
+      int red = 0;
+      int green = 0;
+      int blue = 0;
     };
 
     Color get(uint8_t x, uint8_t y, uint8_t z){
       Color c;
       int index = (z*8+x)*3;
 
-      if(index >= 192){
-        index = 191;
-      }
-      if(index < 0){
-        index = 0;
+      if(inBounce(x,y,z)){
+        c.red = (int)frontBuffer[y][tr[index]].to_ulong();
+        c.green = (int)frontBuffer[y][tr[index+1]].to_ulong();
+        c.blue = (int)frontBuffer[y][tr[index+2]].to_ulong();
       }
 
-      c.red = (int)frontBuffer[y][tr[index]].to_ulong();
-      c.green = (int)frontBuffer[y][tr[index+1]].to_ulong();
-      c.blue = (int)frontBuffer[y][tr[index+2]].to_ulong();
       return c;
     }
 
@@ -145,13 +134,13 @@ class Cube {
 
         bam_counter++;
         for (size_t layer = 0; layer < 8; layer++) {
-          // disable shift registers
+          // disable shift registers output
           bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
           // transfer layer select byte
           bcm2835_spi_transfer(layers[layer]);
           // transfer layer data
           bcm2835_spi_transfernb(engine[layer][bam_bit],r_engine,24);
-          // enable shift registers
+          // enable shift registers output
           bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
 
           // latch pin
