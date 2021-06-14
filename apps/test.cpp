@@ -2,53 +2,56 @@
 #include <thread>
 #include <string>
 #include <filesystem>
-#include <vector>
 #include <cstring>
 #include <bitset>
+#include <vector>
 #include "../lib/Cube.cpp"
 #include "../lib/helpers.h"
-#include "../resources/fonts.cpp"
-
-
-
-
+#include "../lib/Font.cpp"
 
 Cube * cube = new Cube;
+ 
 
-void font(Cube *c,char chr, int x,int y, int z,int r,int g,int b){
 
-  int pos[8] = {7,6,5,4,3,2,1,0};
+void animationChanger(Cube *cube, char *str){
 
-  for(int _y=0;_y<8;_y++){
-    std::bitset<8> bit(fonts[chr][_y]);
-    for (int _x = 0;_x<8; _x++) {
-      if(bit[_x]){
-        c->set(_x+x,pos[_y]+y,z,r,g,b);
-      }
-    }
-  }
-}
-
-void animationChanger(Cube *c, char *str){
-
-  c->clear();
-  c->update();
+  cube->clear();
+  cube->update();
   sleep(1);
 
   int strLength = strlen(str);
 
-  for(int x=0;x<strLength;x++){
+  for(int c=0;c<strLength;c++){
 
-      for (signed i = -3; i < 8; i++) {
-        font(c,str[x],i,0,7,15,15,15);
-        c->update();
-        usleep(500000);
-        c->clear();
+    int *items = Font::asArray(str[c]);
+    int pos[8] = {0,8,16,24,32,40,48,56};
+
+    for (size_t y = 0; y < 8; y++) {
+      for (size_t x = 0; x < 8; x++) {
+        std::cout << x;
+        if(items[pos[x]+y]){
+          std::cout << pos[y]+x << " ";
+          cube->set(x,pos[x]+y,7,0,0,15);
+        }
       }
+      std::cout << std::endl;
+      cube->shift(AXIS_X,-1);
+      cube->update();
+      usleep(100000);
+    }
+
+
+    // for (int x = 0; x < 8; x++) {
+    //   for (int y = 0; y < 8; y++) {
+    //     if(items[x*8+y])
+    //       cube->set(x,y,7,0,0,15);
+    //   }
+    // }
+
 
   }
 
-  c->update();
+  cube->update();
 }
 
 int main(int argc, char *argv[]){

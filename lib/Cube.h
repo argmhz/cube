@@ -107,6 +107,10 @@ class Cube {
       int blue = 0;
     };
 
+    struct Point {
+      int x,y,z;
+    };
+
     Color get(uint8_t x, uint8_t y, uint8_t z){
       Color c;
       int index = (z*8+x)*3;
