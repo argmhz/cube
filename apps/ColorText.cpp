@@ -1,10 +1,8 @@
 #include <iostream>
 #include <thread>
-#include <string>
-#include <filesystem>
 #include <cstring>
-#include <bitset>
 #include <vector>
+
 #include "../lib/Cube.cpp"
 #include "../lib/helpers.h"
 #include "../lib/Font.cpp"
@@ -47,7 +45,6 @@ void animationChanger(Cube *cube, char *str){
     cube->update();
     sleep(1);
   }
-
 
 }
 
