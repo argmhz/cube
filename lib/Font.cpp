@@ -25,19 +25,19 @@ public:
       return points;
   }
 
-  static int * asArray(char chr){
+  static std::array<std::array<int, 8>,8> asArray(char chr){
+
+    std::array<std::array<int, 8>,8> items;
     int pos[8] = {7,6,5,4,3,2,1,0};
-    static int items[64];
 
     for(int y=0;y<8;y++){
       std::bitset<8> bit(fonts[chr][y]);
       for (int x = 0;x<8; x++) {
-          items[x*8+pos[y]] = bit[x];
+        items[pos[y]][x] = bit[x];
       }
     }
+
     return items;
   }
-
-
 
 };
