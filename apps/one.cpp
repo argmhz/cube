@@ -19,7 +19,7 @@ void animationChanger(Cube *c, char * name){
 
 int main(int argc, char *argv[]){
 
-  srand (time(NULL));
+  // srand (time(NULL));
 
   std::thread t(animationChanger, cube,argv[1]);
   std::thread c = cube->start();
