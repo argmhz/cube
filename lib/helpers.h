@@ -4,6 +4,8 @@
 #include <time.h>
 #include <math.h>
 
+#define PI 3.14159265
+
 std::clock_t c_start = std::clock();
 
 
@@ -72,4 +74,54 @@ Cube::Color makeColorGradient(int index){
     colors.green = map(sin(frequency2*index + phase2) * width + center,0,255,0,15);
     colors.blue = map(sin(frequency3*index + phase3) * width + center,0,255,0,15);
     return colors;
+}
+
+void init_LUT(unsigned char LUT[65])
+{
+  unsigned char i;
+  float sin_of,sine;
+  for (i=0;i<65;i++)
+  {
+    sin_of=i*PI/64; // Just need half a sin wave
+    sine=sin(sin_of);
+    // Use 181.0 as this squared is <32767, so we can multiply two sin or cos without overflowing an int.
+    LUT[i]=sine*181.0;
+  }
+}
+
+int totty_sin(unsigned char LUT[65],int sin_of)
+{
+  unsigned char inv=0;
+  if (sin_of<0)
+  {
+    sin_of=-sin_of;
+    inv=1;
+  }
+  sin_of&=0x7f; //127
+  if (sin_of>64)
+  {
+    sin_of-=64;
+    inv=1-inv;
+  }
+  if (inv)
+    return -LUT[sin_of];
+  else
+    return LUT[sin_of];
+}
+
+
+int totty_cos(unsigned char LUT[65],int cos_of)
+{
+	unsigned char inv=0;
+	cos_of+=32;// Simply rotate by 90 degrees for COS
+	cos_of&=0x7f;//127
+	if (cos_of>64)
+	{
+		cos_of-=64;
+		inv=1;
+	}
+	if (inv)
+		return -LUT[cos_of];
+	else
+		return LUT[cos_of];
 }

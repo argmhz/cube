@@ -57,6 +57,15 @@ class Cube {
 
 
   public:
+    struct Color{
+      int red = 0;
+      int green = 0;
+      int blue = 0;
+    };
+
+    struct Point {
+      int x,y,z;
+    };
 
   	Cube(){
       initBcm2835();
@@ -101,15 +110,10 @@ class Cube {
       }
     }
 
-    struct Color{
-      int red = 0;
-      int green = 0;
-      int blue = 0;
-    };
+    void set(int x, int y, int z, Cube::Color color){
+      set(x,y,x, color.red, color.green, color.blue);
+    }
 
-    struct Point {
-      int x,y,z;
-    };
 
     Color get(uint8_t x, uint8_t y, uint8_t z){
       Color c;
@@ -204,9 +208,14 @@ class Cube {
 
   	void line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b);
   	void shift(int axis,int direction);
+    void shiftPlane(int axis,int index,int direction);
     void rotate(double pitch,double roll,double yaw);
     void sphere(int x,int y,int z,int radius,int r, int g,int b);
     void all(int r, int g,int b);
+    void box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b);
+    void boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
+    void hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
+    void rotateZ(int degree);
   private:
     void createFrame(){
       for (int s = 0; s < 8; ++s){

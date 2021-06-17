@@ -27,6 +27,7 @@ void Cube::plane(int axis,int index,int r,int g,int b){
    }
 }
 
+
 void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
 
 	    // Iterate through phi, theta then convert r,theta,phi to  XYZ
@@ -39,56 +40,56 @@ void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
     }
 
 }
-// void Cube::shiftPlane(int axis,int index,int direction){
-//
-// 	int _z,_y,__z,__y;
-//
-// 		for(int z=0;z<8;z++){
-// 			for(int y=0;y<8;y++){
-//
-// 				if(direction == -1){
-// 					_z = z;
-// 					__z = z+1;
-// 				} else {
-// 					_z = abs(z-7);
-// 					__z = _z-1;
-// 				}
-//
-// 				switch(axis){
-// 				case AXIS_X:
-// 					if(inRange(index,y,__z)){
-// 						set(index,y,_z,get(index,y,__z));
-// 					}
-// 					else
-// 					{
-// 						clear(index,y,_z);
-// 					}
-// 				break;
-//
-// 				case AXIS_Y:
-// 					if(inRange(__z,index,y)){
-// 						set(_z,index,y,get(__z,index,y));
-// 					}
-// 					else
-// 					{
-// 						clear(_z,index,y);
-// 					}
-// 				break;
-// 				case AXIS_Z:
-// 					if(inRange(__z,y,index)){
-// 						set(_z,y,index,get(__z,y,index));
-// 					}
-// 					else
-// 					{
-// 						clear(_z,y,index);
-// 					}
-// 				break;
-// 				}
-//
-// 			}
-// 		}
-//
-// }
+void Cube::shiftPlane(int axis,int index,int direction){
+
+	int _z,_y,__z,__y;
+
+		for(int z=0;z<8;z++){
+			for(int y=0;y<8;y++){
+
+				if(direction == -1){
+					_z = z;
+					__z = z+1;
+				} else {
+					_z = abs(z-7);
+					__z = _z-1;
+				}
+
+				switch(axis){
+				case AXIS_X:
+					if(inBounce(index,y,__z)){
+						set(index,y,_z,get(index,y,__z));
+					}
+					else
+					{
+						clear(index,y,_z);
+					}
+				break;
+
+				case AXIS_Y:
+					if(inBounce(__z,index,y)){
+						set(_z,index,y,get(__z,index,y));
+					}
+					else
+					{
+						clear(_z,index,y);
+					}
+				break;
+				case AXIS_Z:
+					if(inBounce(__z,y,index)){
+						set(_z,y,index,get(__z,y,index));
+					}
+					else
+					{
+						clear(_z,y,index);
+					}
+				break;
+				}
+
+			}
+		}
+
+}
 
 
 void Cube::line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b){
@@ -201,35 +202,83 @@ void Cube::shift(int axis,int direction){
 
 }
 
-// // rotate(pitch, roll, yaw) {
-//     var cosa = Math.cos(yaw);
-//     var sina = Math.sin(yaw);
-//
-//     var cosb = Math.cos(pitch);
-//     var sinb = Math.sin(pitch);
-//
-//     var cosc = Math.cos(roll);
-//     var sinc = Math.sin(roll);
-//
-//     var Axx = cosa*cosb;
-//     var Axy = cosa*sinb*sinc - sina*cosc;
-//     var Axz = cosa*sinb*cosc + sina*sinc;
-//
-//     var Ayx = sina*cosb;
-//     var Ayy = sina*sinb*sinc + cosa*cosc;
-//     var Ayz = sina*sinb*cosc - cosa*sinc;
-//
-//     var Azx = -sinb;
-//     var Azy = cosb*sinc;
-//     var Azz = cosb*cosc;
-//
-//     for (var i = 0; i < points.length; i++) {
-//         var px = points[i].x;
-//         var py = points[i].y;
-//         var pz = points[i].z;
-//
-//         points[i].x = Axx*px + Axy*py + Axz*pz;
-//         points[i].y = Ayx*px + Ayy*py + Ayz*pz;
-//         points[i].z = Azx*px + Azy*py + Azz*pz;
-//     }
-// }
+void Cube::box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b) {
+  if (startx > endx) swapint(startx,endx);
+  if (starty > endy) swapint(starty,endy);
+  if (startz > endz) swapint(startz,endz);
+
+  for (int i = startx; i <= endx; i++) {
+    for (int j = starty; j <= endy; j++) {
+      for (int k = startz; k <= endz; k++) {
+        set(i,j,k,r,g,b);
+      }
+    }
+  }
+}
+
+void Cube::hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
+  if (startx > endx) swapint(startx,endx);
+  if (starty > endy) swapint(starty,endy);
+  if (startz > endz) swapint(startz,endz);
+
+  for (int i = startx; i <= endx; i ++) {
+    for (int j = starty; j <= endy; j ++) {
+      for (int k = startz; k <= endz; k ++) {
+        if (i == startx || i == endx || j == starty || j == endy || k == startz || k == endz) {
+          set(i,j,k,r,g,b);
+        }
+      }
+    }
+  }
+}
+
+void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
+  if (startx > endx) swapint(startx,endx);
+  if (starty > endy) swapint(starty,endy);
+  if (startz > endz) swapint(startz,endz);
+
+
+  for (int i = startx; i <= endx; i++) {
+    for (int j = starty; j <= endy; j++) {
+      for (int k = startz; k <= endz; k++) {
+        int sum =  (i == startx) + (i == endy) + (j == starty) + (j == endy) + (k == startz) + (k == endz);
+        if (sum >= 2){
+          set(i,j,k,r,g,b);
+        }
+      }
+    }
+  }
+}
+
+// var rotateZ3D = function(theta) {
+//    var sinTheta = sin(theta);
+//    var cosTheta = cos(theta);
+//    for (var n = 0; n < nodes.length; n++) {
+//       var node = nodes[n];
+//       var x = node[0];
+//       var y = node[1];
+//       node[0] = x * cosTheta - y * sinTheta;
+//       node[1] = y * cosTheta + x * sinTheta;
+//    }
+// };
+
+void Cube::rotateZ(int degree){
+  float sinT = sin(degree);
+  float cosT = cos(degree);
+
+  for (size_t x = 0; x < 8; x++) {
+    for (size_t y = 0; y < 8; y++) {
+      for (size_t z = 0; z < 8; z++) {
+
+        set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
+        // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
+         std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
+        // x=4*sin(j)*cos(i);
+        // y=4*sin(j)*sin(i);
+        // z=4*cos(j);
+      }
+    }
+  }
+}
+// i and j are angles like latitude and longitude
+// x=radius*sin(j)*cos(i); y=radius*sin(j)*sin(i); z=radius*cos(j);

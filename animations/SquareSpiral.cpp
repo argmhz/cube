@@ -9,7 +9,7 @@ class SquareSpiral : public Animation {
 
     int loc = 0;
     int iter = 0;
-    while (cube->isRunning())
+    while (isRunning())
     {
       for (loc =0;loc < 7; loc ++)
       {
