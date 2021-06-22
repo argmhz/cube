@@ -9,7 +9,7 @@ class Wipeout : public Animation {
 
 
   void draw(Cube *c) {
-
+    int speed = 12000;
     int xxx=0, yyy=0, zzz=0;
   int fx=random(8), fy=random(8), fz=random(8), direct, fxm=1, fym=1, fzm=1, fxo=0, fyo=0, fzo=0;
   int  ftx=random(8), fty=random(8), ftz=random(8), ftxm=1, ftym=1, ftzm=1, ftxo=0, ftyo=0, ftzo=0;
@@ -83,7 +83,7 @@ class Wipeout : public Animation {
     c->set(fx, fy-1, fz, rrt, ggt, bbt);
 
     c->update();
-     usleep(10000);
+     usleep(speed);
 
     fxo=fx;
     fyo=fy;

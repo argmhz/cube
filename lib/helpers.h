@@ -17,10 +17,10 @@ int random(int max) {
   return random(0,max);
 }
 
-unsigned long millis(){
-  std::clock_t c_end = std::clock();
-  return 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC;
-}
+// unsigned long millis(){
+//   std::clock_t c_end = std::clock();
+//   return 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC;
+// }
 
 double dmap(double in, double inMin, double inMax, double outMin, double outMax){
     double out;

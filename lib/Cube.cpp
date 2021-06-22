@@ -26,7 +26,31 @@ void Cube::plane(int axis,int index,int r,int g,int b){
     break;
    }
 }
-
+void Cube::clearPlane(int axis,int index){
+  switch (axis) {
+    case AXIS_X:
+      for (size_t z = 0; z < 8; z++) {
+        for (size_t y = 0; y < 8; y++) {
+          clear(index,y,z);
+        }
+      }
+    break;
+    case AXIS_Y:
+      for (size_t z = 0; z < 8; z++) {
+        for (size_t x = 0; x < 8; x++) {
+          clear(x,index,z);
+        }
+      }
+    break;
+    case AXIS_Z:
+      for (size_t x = 0; x < 8; x++) {
+        for (size_t y = 0; y < 8; y++) {
+          clear(x,y,index);
+        }
+      }
+    break;
+  }
+}
 
 void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
 

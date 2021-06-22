@@ -209,6 +209,7 @@ class Cube {
   	void line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b);
   	void shift(int axis,int direction);
     void shiftPlane(int axis,int index,int direction);
+    void clearPlane(int axis,int index);
     void rotate(double pitch,double roll,double yaw);
     void sphere(int x,int y,int z,int radius,int r, int g,int b);
     void all(int r, int g,int b);
