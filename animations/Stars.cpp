@@ -5,9 +5,9 @@
 
 class Stars : public Animation {
 
+  Cube *cube;
 
-
-  void static blink(Cube *cube) {
+  void blink() {
 
     int i;
   	while(isRunning()){
@@ -28,14 +28,16 @@ class Stars : public Animation {
   	}
   }
 
-  void draw(Cube *cube) {
+  void draw(Cube *c) {
+
+    cube = c;
 
     int num_blink = 5;
 
   	std::thread blinks[num_blink];
 
   	for (int i = 0; i < num_blink; i++) {
-  		blinks[i] = std::thread(blink,cube);
+  		blinks[i] = std::thread([this] {this->blink(); });
   	}
 
   	for (int i = 0; i < num_blink; i++) {
