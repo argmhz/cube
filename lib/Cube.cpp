@@ -26,6 +26,10 @@ void Cube::plane(int axis,int index,int r,int g,int b){
     break;
    }
 }
+void Cube::plane(int axis,int index,Color color) {
+  plane(axis, index, color.red, color.green, color.blue);
+}
+
 void Cube::clearPlane(int axis,int index){
   switch (axis) {
     case AXIS_X:
@@ -62,8 +66,12 @@ void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
             set(round(radius * cos(phi) * sin(theta) + x),round(radius * sin(phi) * sin(theta) + y),round(radius * cos(theta) + z),r,g,b);
         }
     }
-
 }
+
+void Cube::sphere(int x,int y,int z,int radius, Color color) {
+  sphere(x,y,z,radius, color.red, color.green, color.blue);
+}
+
 void Cube::shiftPlane(int axis,int index,int direction){
 
 	int _z,_y,__z,__y;
@@ -160,6 +168,10 @@ void Cube::all(int r, int g,int b){
       }
     }
   }
+}
+
+void Cube::all(Color color) {
+  all(color.red,color.green,color.blue);
 }
 
 void Cube::shift(int axis,int direction){
@@ -285,24 +297,24 @@ void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, in
 //       node[1] = y * cosTheta + x * sinTheta;
 //    }
 // };
-
-void Cube::rotateZ(int degree){
-  float sinT = sin(degree);
-  float cosT = cos(degree);
-
-  for (size_t x = 0; x < 8; x++) {
-    for (size_t y = 0; y < 8; y++) {
-      for (size_t z = 0; z < 8; z++) {
-
-        set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
-        // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
-         std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
-        // x=4*sin(j)*cos(i);
-        // y=4*sin(j)*sin(i);
-        // z=4*cos(j);
-      }
-    }
-  }
-}
+//
+// void Cube::rotateZ(int degree){
+//   float sinT = sin(degree);
+//   float cosT = cos(degree);
+//
+//   for (size_t x = 0; x < 8; x++) {
+//     for (size_t y = 0; y < 8; y++) {
+//       for (size_t z = 0; z < 8; z++) {
+//
+//         set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
+//         // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
+//          std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
+//         // x=4*sin(j)*cos(i);
+//         // y=4*sin(j)*sin(i);
+//         // z=4*cos(j);
+//       }
+//     }
+//   }
+// }
 // i and j are angles like latitude and longitude
 // x=radius*sin(j)*cos(i); y=radius*sin(j)*sin(i); z=radius*cos(j);

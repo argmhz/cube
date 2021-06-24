@@ -188,7 +188,7 @@ class Cube {
       return cubeThread;
     }
 
-    void plane(int axis,int index,int r,int g,int b);
+
 
     void swapint(int & one, int & two) {
 	  	one = one^two;
@@ -206,17 +206,20 @@ class Cube {
   	  	return output;
   	}
 
+    void plane(int axis,int index,int r,int g,int b);
+    void plane(int axis,int index,Color color);
   	void line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b);
   	void shift(int axis,int direction);
     void shiftPlane(int axis,int index,int direction);
     void clearPlane(int axis,int index);
-    void rotate(double pitch,double roll,double yaw);
     void sphere(int x,int y,int z,int radius,int r, int g,int b);
+    void sphere(int x,int y,int z,int radius,Color color);
     void all(int r, int g,int b);
+    void all(Color color);
     void box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b);
     void boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
     void hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
-    void rotateZ(int degree);
+
   private:
     void createFrame(){
       for (int s = 0; s < 8; ++s){
