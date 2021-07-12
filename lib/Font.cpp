@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "../resources/fonts.cpp"
 // #include "../resources/box.cpp"

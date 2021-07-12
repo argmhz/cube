@@ -1,3 +1,4 @@
+#pragma once
 #include <dlfcn.h>
 #include <unistd.h>
 #include <string>
@@ -25,6 +26,10 @@ public:
       return true;
     }
     return false;
+  }
+
+  void loadAnimation(Animation *a){
+    animation = a;
   }
 
   void loadAnimation(char const* name) {

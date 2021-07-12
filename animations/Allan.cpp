@@ -6,7 +6,6 @@ class Allan : public Animation {
 
   void draw(Cube *c) {
 
-    int r,g,b;
     while(isRunning()){
       for (size_t x = 0; x < 8; x++) {
         for (size_t y = 0; y < 8; y++) {
@@ -23,11 +22,8 @@ class Allan : public Animation {
     }
 
     c->clear();
-  }
+  }  
 
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 extern "C" Animation * create() {
     return new Allan;

@@ -16,33 +16,27 @@ void animationChanger(Cube *c){
 
   for (std::string file : files) {
     try {
-      std::cout << file << std::endl;
       manager->loadAnimation(file.c_str());
-        std::cout << "her";
       manager->getAnimation().draw(c);
     } catch (int e){
-        std::cout << "nej nej nej";
+        std::cout << "Der skete en fejl med " << file.c_str();
     }
 
   }
 
+  c->clear();
+  c->update();
   c->stop();
 }
 
 void next(Cube *c){
-  // int s = manager->getAnimation().getDuration() || 10;
-
   while(c->isRunning()){
-    // std::cout << manager->isReady() << std::endl;
     sleep(1);
     if(manager->isReady()) {
-      std::cout << manager->getAnimation().getDuration() << std::endl;
       sleep((unsigned)manager->getAnimation().getDuration());
       manager->stopAnimation();
     }
-
   }
-
 }
 
 int main(int argc, char *argv[])
@@ -57,9 +51,6 @@ int main(int argc, char *argv[])
   cube->clear();
   cube->update();
   std::thread nextThread(next,cube);
-    // manager->loadAnimation("bin/animations/SinewaveTwo.so");
-    // manager->getAnimation().draw(cube);
-
 
   start.join();
   th.join();

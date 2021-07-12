@@ -1,3 +1,4 @@
+#pragma once
 #include "Cube.h"
 #include <math.h>
 

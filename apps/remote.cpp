@@ -1,39 +1,71 @@
 #include <iostream>
 #include <thread>
-#include <vector>
-#include <iomanip>
+#include <mutex>
+#include <string>
+// #include <vector>
+// #include <iomanip>
+
 #include "../lib/Cube.cpp"
 #include "../lib/helpers.h"
 #include "../lib/json.hpp"
+#include "../lib/AniManager.cpp"
+#include "../animations/Text.cpp"
+#include "../lib/remotehelpers.cpp"
 
 using json = nlohmann::json;
 
+std::mutex msg_mutex;
 Cube * cube = new Cube;
+AniManager *manager;
+
+std::string selectedAnimaiton = "./bin/animations/Text.so";
+
+void incoming(){
+  // instantiate Animation manager
+  manager = new AniManager(cube);
+
+  while (true) {
+
+    std::lock_guard<std::mutex> lock{msg_mutex};
+
+    for (std::string line; std::getline(std::cin, line);) {
+      std::cout << line << std::endl;
+      json command = json::parse(line);
+
+      if(command["action"] == "select"){
+        selectedAnimaiton = "./bin/animations/" + (std::string)command["animation"] + ".so";
+        manager->getAnimation().stop();
+      }
+
+      if(command["action"] == "set") {
+        manager->getAnimation().onDataUpdate(command);
+      }
+
+    }
+
+  }
+}
 
 int main(int argc, char *argv[]){
   setbuf(stdout, NULL);
+  setbuf(stdin, NULL);
   srand (time(NULL));
 
-  char text[] = R"(
-      {
-          "Book": {
-              "Width":  450,
-              "Height": 30,
-              "Title":  "Hello World",
-              "isBiography": false,
-              "NumOfCopies": 4,
-              "LibraryIDs": [2319, 1406, 3854, 987]
-          }
-      }
-      )";
+  // Start cube
+  std::thread cubeThread = cube->start();
+  std::thread incomingThread(incoming);
 
-      // Let's parse and serialize JSON
-    json j_complete = json::parse(text);
-    std::cout << std::setw(4) << j_complete << std::endl;
+  // // listen for incoming data....
+  while(cube->isRunning()){
+    std::cout << "Change to " << selectedAnimaiton.c_str() << std::endl;
+    manager->loadAnimation(selectedAnimaiton.c_str());
+    std::cout << manager->getAnimation().getPropertiesString() << std::endl;
+    cube->clear();
+    cube->update();
+    manager->getAnimation().draw(cube);
+    sleep(1);
+  }
 
-
-
-  // std::thread c = cube->start();
-  // c.join();
-
+  cubeThread.join();
+  incomingThread.join();
 }

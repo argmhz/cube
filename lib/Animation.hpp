@@ -1,16 +1,24 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "../lib/json.hpp"
+
+using json = nlohmann::json;
 
 class Cube;
 class Animation {
 public:
 
   Animation() {
-    std::cout << "Animation starter";
+    // std::cout << "Animation starter";
   }
   ~Animation(){}
   virtual void draw(Cube *c)=0;
+
+  virtual const char* getPropertiesString(){
+    return R"({})";
+  }
+ 
 
   int getDuration(){
     return 10;
@@ -23,7 +31,8 @@ public:
   bool isRunning(){
     return running;
   }
-  // virtual void onDataUpdate(std::vector<std::string> data);
+
+  virtual void onDataUpdate(json data){}
 
 private:
   bool running = true;
