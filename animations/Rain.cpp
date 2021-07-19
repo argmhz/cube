@@ -9,7 +9,7 @@ class Rain : public Animation {
   int max_drops = 4;
   int tens = 3;
 
-  const char* getPropertiesString(){
+  std::string getPropertiesString(){
     return R"({
       "speed" : { "type" : "int", default: 65000 },
       "max_drops" : { "type" : "int", default: 4 },

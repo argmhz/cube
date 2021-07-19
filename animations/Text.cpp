@@ -7,26 +7,29 @@
 
 class Text : public Animation {
 
-  const char *str = "";
-  const char *tmp_str = "";
+  std::string str = "";
+  std::string tmp = "Topper 3D ";
 public:
 
-  void setText(const char* string) {
-    tmp_str = string;
+  void setText(char* string) {
+    tmp = std::string(string);
   }
 
   void setText(std::string string){
-    tmp_str = string.c_str();
+    tmp = string;
   }
 
   void onDataUpdate(json data){
 
+    if(data["text"].is_string()){
+        tmp = data["text"].get<std::string>();
+    }
 
-    std::string s = data["text"].get<std::string>();
 
-    // std::cout << s << " " <<  s.c_str() << std::endl;
-    setText(s.c_str());
+  }
 
+  std::string getPropertiesString(){
+    return R"({ "text" : { "type" : "string" } })";
   }
 
   void draw(Cube *cube) {
@@ -37,10 +40,9 @@ public:
 
       while(isRunning()){
 
-        str = tmp_str;
-        int strLength = strlen(str);
+        str = tmp;
 
-        for(int c=0;c<strLength;c++){
+        for(signed c=0;c<str.length();c++){
 
           std::array<std::array<int,8>,8> items = Font::asArray(str[c]);
 

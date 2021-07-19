@@ -15,10 +15,10 @@ public:
   ~Animation(){}
   virtual void draw(Cube *c)=0;
 
-  virtual const char* getPropertiesString(){
+  virtual std::string getPropertiesString(){
     return R"({})";
   }
- 
+
 
   int getDuration(){
     return 10;

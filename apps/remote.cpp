@@ -20,6 +20,13 @@ AniManager *manager;
 
 std::string selectedAnimaiton = "./bin/animations/Text.so";
 
+void response(std::string type, std::string responseMessage){
+  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\n'), responseMessage.end());
+  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\r'), responseMessage.end());
+
+  std::cout << "{\"" << type << "\":" << responseMessage << "}" <<  std::endl;
+}
+
 void incoming(){
   // instantiate Animation manager
   manager = new AniManager(cube);
@@ -29,7 +36,7 @@ void incoming(){
     std::lock_guard<std::mutex> lock{msg_mutex};
 
     for (std::string line; std::getline(std::cin, line);) {
-      std::cout << line << std::endl;
+
       json command = json::parse(line);
 
       if(command["action"] == "select"){
@@ -40,6 +47,7 @@ void incoming(){
       if(command["action"] == "set") {
         manager->getAnimation().onDataUpdate(command);
       }
+
 
     }
 
@@ -55,11 +63,11 @@ int main(int argc, char *argv[]){
   std::thread cubeThread = cube->start();
   std::thread incomingThread(incoming);
 
-  // // listen for incoming data....
   while(cube->isRunning()){
     std::cout << "Change to " << selectedAnimaiton.c_str() << std::endl;
     manager->loadAnimation(selectedAnimaiton.c_str());
-    std::cout << manager->getAnimation().getPropertiesString() << std::endl;
+    response("fields", manager->getAnimation().getPropertiesString());
+
     cube->clear();
     cube->update();
     manager->getAnimation().draw(cube);
