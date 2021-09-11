@@ -60,7 +60,6 @@ void incoming(){
       json command = json::parse(buffer);
 
       if(command["action"] == "select"){
-        // selectedAnimaiton = "./bin/animations/" + (std::string)command["animation"] + ".so";
         selectedAnimaiton = (std::string)command["animation"];
         manager->getAnimation().stop();
       }
@@ -104,13 +103,13 @@ int main(int argc, char *argv[]){
   manager->getAnimation().draw(cube);
 
   while(cube->isRunning()){
-
     manager->loadAnimation(selectedAnimaiton.c_str());
 
     cube->clear();
     cube->update();
+
     manager->getAnimation().draw(cube);
-  
+
   }
 
   cubeThread.join();

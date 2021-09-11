@@ -4,13 +4,13 @@
 #include "../lib/helpers.h"
 #include "../lib/Font.cpp"
 #include "../lib/json.hpp"
-// #include "../lib/remotehelpers.cpp"
 
 class Text : public Animation {
 
   std::string str = "";
   std::string tmp = "Topper 3D ";
-
+  int color_speed = 22000;
+  int speed = 80000;
   int r = 15;
   int g = 15;
   int b = 15;
@@ -28,11 +28,19 @@ public:
     if(data["text"].is_string()){
         tmp = data["text"].get<std::string>();
     }
+
+    if(data["color_speed"].is_number()){
+      color_speed = data["color_speed"].get<int>();
+    }
+
+    if(data["speed"].is_number()){
+      speed = data["speed"].get<int>();
+    }
   }
 
   void changeColor(){
     int i = 0;
-    while(true){
+    while(isRunning()){
       Cube::Color c = makeColorGradient(i);
       i++;
       r = c.red;
@@ -42,7 +50,7 @@ public:
       if(i == 255){
         i = 0;
       }
-      usleep(25000);
+      usleep(color_speed);
     }
   }
 
@@ -64,9 +72,9 @@ public:
                  cube->set(7,y,7,r,g,b);
                }
             }
-            cube->shift(AXIS_X,-1);
             cube->update();
-            usleep(80000);
+            cube->shift(AXIS_X,-1);
+            usleep(speed);
           }
 
         }
@@ -77,7 +85,6 @@ public:
       }
 
       ColorChangerThread.join();
-
   }
 
 
