@@ -6,7 +6,7 @@
 class Wipeout : public Animation {
 
   unsigned long start;
-
+ 
 
   void draw(Cube *c) {
     int speed = 12000;
@@ -139,9 +139,6 @@ class Wipeout : public Animation {
 
   }
 
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 
 extern "C" Animation * create() {

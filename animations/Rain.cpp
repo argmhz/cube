@@ -9,14 +9,6 @@ class Rain : public Animation {
   int max_drops = 4;
   int tens = 3;
 
-  std::string getPropertiesString(){
-    return R"({
-      "speed" : { "type" : "int", default: 65000 },
-      "max_drops" : { "type" : "int", default: 4 },
-      "tens" : { "type" : "int", default: 3 }
-    })";
-  }
-
   void onDataUpdate(json data){
 
     if(data["speed"].is_number()){

@@ -28,6 +28,18 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+Cube::Color colorConverter(std::string hexValue){
+  Cube::Color rgbColor;
+  std::sscanf(hexValue.c_str(), "%02x%02x%02x", &rgbColor.red, &rgbColor.green, &rgbColor.blue);
+
+  rgbColor.red = map(rgbColor.red,0,255,0,15);
+  rgbColor.green = map(rgbColor.green,0,255,0,15);
+  rgbColor.blue = map(rgbColor.blue,0,255,0,15);
+
+  return rgbColor;
+}
+
+
 /**
  * Creates an voctor with rgb values between the to input colors
 */

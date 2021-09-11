@@ -10,6 +10,10 @@ class Text : public Animation {
 
   std::string str = "";
   std::string tmp = "Topper 3D ";
+
+  int r = 15;
+  int g = 15;
+  int b = 15;
 public:
 
   void setText(char* string) {
@@ -21,23 +25,30 @@ public:
   }
 
   void onDataUpdate(json data){
-
     if(data["text"].is_string()){
         tmp = data["text"].get<std::string>();
     }
-
-
   }
 
-  std::string getPropertiesString(){
-    return R"({ "text" : { "type" : "string" } })";
+  void changeColor(){
+    int i = 0;
+    while(true){
+      Cube::Color c = makeColorGradient(i);
+      i++;
+      r = c.red;
+      g = c.green;
+      b = c.blue;
+
+      if(i == 255){
+        i = 0;
+      }
+      usleep(25000);
+    }
   }
 
   void draw(Cube *cube) {
 
-      int r = rand()%16;
-      int g = rand()%16;
-      int b = rand()%16;
+    std::thread ColorChangerThread([this]{ this->changeColor(); });
 
       while(isRunning()){
 
@@ -50,18 +61,9 @@ public:
           for (signed x = 0; x < 8; x++) {
             for (signed y = 0; y < 8; y++) {
                if(items[y][x]){
-                 cube->set(7,y,0,r,g,b);
-                 cube->set(7,y,1,r,g,b);
-                 cube->set(7,y,2,r,g,b);
-                 cube->set(7,y,3,r,g,b);
-                 cube->set(7,y,4,r,g,b);
-                 cube->set(7,y,5,r,g,b);
-                 cube->set(7,y,6,r,g,b);
                  cube->set(7,y,7,r,g,b);
                }
-
             }
-
             cube->shift(AXIS_X,-1);
             cube->update();
             usleep(80000);
@@ -74,7 +76,11 @@ public:
         sleep(1);
       }
 
+      ColorChangerThread.join();
+
   }
+
+
 
 };
 extern "C" Animation * create() {
