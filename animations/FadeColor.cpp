@@ -12,7 +12,7 @@ class FadeColor : public Animation {
 
 
     while(isRunning()){
-      for (size_t i = 0; i < 128; i++) {
+      for (size_t i = 0; i < 256; i++) {
 
         if(!isRunning()){
           break;
