@@ -4,9 +4,19 @@
 
 class ColorWheel : public Animation {
 
+  int speed = 20000;
+
+  void onDataUpdate(json data){
+
+    if(data["speed"].is_number()){
+      speed = data["speed"].get<int>();
+    }
+
+  }
+
   void draw(Cube *c){
 
-    int t = 20000;
+
     int xx, yy, zz, ww, rr=1, gg=1, bb=1, ranx, rany, swiper;
 
     while(isRunning()){
@@ -22,7 +32,7 @@ class ColorWheel : public Animation {
         }
 
         c->update();
-        usleep(t);
+        usleep(speed);
       }
 
       ranx=random(16);
@@ -35,7 +45,7 @@ class ColorWheel : public Animation {
           }
         }
         c->update();
-        usleep(t);
+        usleep(speed);
       }
       ranx=random(16);
       rany=random(16);
@@ -47,7 +57,7 @@ class ColorWheel : public Animation {
           }
         }
         c->update();
-        usleep(t);
+        usleep(speed);
       }
 
       ranx=random(16);
@@ -59,7 +69,7 @@ class ColorWheel : public Animation {
           }
         }
         c->update();
-        usleep(t);
+        usleep(speed);
       }
 
     }//while

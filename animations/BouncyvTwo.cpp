@@ -4,6 +4,16 @@
 
 class BouncyvTwo : public Animation {
 
+  int speed = 10000;
+
+  void onDataUpdate(json data){
+
+    if(data["speed"].is_number()){
+      speed = data["speed"].get<int>();
+    }
+
+  }
+
   void draw(Cube *c){
 
     int wipex, wipey, wipez, ranr, rang, ranb, select, oldx[50], oldy[50], oldz[50];
@@ -27,7 +37,8 @@ class BouncyvTwo : public Animation {
        direct = random(3);
 
     for(addr=1; addr<ledcount+1; addr++){
-    c->set(oldx[addr], oldy[addr],oldz[addr], 0,0,0);
+    // c->set(oldx[addr], oldy[addr],oldz[addr], 0,0,0);
+    c->clear(oldx[addr], oldy[addr],oldz[addr]);
     c->set(x[addr], y[addr], z[addr], xx[addr],yy[addr],zz[addr]);
     }
 
@@ -37,11 +48,7 @@ class BouncyvTwo : public Animation {
     oldz[addr]=z[addr];
     }
     c->update();
-    usleep(10000);
-
-
-    //direcTwo=random(3);
-    //if(direcTwo==1)
+    usleep(speed);
 
 
 
@@ -69,7 +76,6 @@ class BouncyvTwo : public Animation {
     xx[0]=random(16);
     yy[0]=random(16);
     zz[0]=0;
-    //wipe_out();
     }
     if(x[0]<0){
     xbit=1;
@@ -77,7 +83,6 @@ class BouncyvTwo : public Animation {
     xx[0]=random(16);
     yy[0]=0;
     zz[0]=random(16);
-    //wipe_out();
     }
     if(y[0]>7){
     ybit=-1;
@@ -85,7 +90,6 @@ class BouncyvTwo : public Animation {
     xx[0]=0;
     yy[0]=random(16);
     zz[0]=random(16);
-    //wipe_out();
     }
     if(y[0]<0){
     ybit=1;
@@ -93,7 +97,6 @@ class BouncyvTwo : public Animation {
      xx[0]=0;
     yy[0]=random(16);
     zz[0]=random(16);
-    //wipe_out();
     }
     if(z[0]>7){
     zbit=-1;
@@ -101,7 +104,6 @@ class BouncyvTwo : public Animation {
     xx[0]=random(16);
     yy[0]=0;
     zz[0]=random(16);
-    //wipe_out();
     }
     if(z[0]<0){
     zbit=1;
@@ -109,7 +111,6 @@ class BouncyvTwo : public Animation {
      xx[0]=random(16);
     yy[0]=random(16);
     zz[0]=0;
-    //wipe_out();
     }
 
     for(addr=ledcount; addr>0; addr--){

@@ -57,24 +57,27 @@ void incoming(){
       string buffer;
       newSocket->socket_read(buffer, 1024); //Read 1024 bytes of the stream
 
-      json command = json::parse(buffer);
+      try {
+        json command = json::parse(buffer);
 
-      if(command["action"] == "select"){
-        selectedAnimaiton = (std::string)command["animation"];
-        manager->getAnimation().stop();
-      }
+        if(command["action"] == "select"){
+          selectedAnimaiton = (std::string)command["animation"];
+          manager->getAnimation().stop();
+        }
 
-      if(command["action"] == "set") {
-        manager->getAnimation().onDataUpdate(command);
-      }
+        if(command["action"] == "set") {
+          manager->getAnimation().onDataUpdate(command);
+        }
 
-      if(command["action"] == "options"){
-        std::vector<string> files = manager->getAnimationsFiles("./bin/animations");
-        json result;
-        result["action"] = "options";
-        result["animations"] = files;
-        newSocket->socket_write((string)result.dump());
-      }
+        if(command["action"] == "options"){
+          std::vector<string> files = manager->getAnimationsFiles("./bin/animations");
+          json result;
+          result["action"] = "options";
+          result["animations"] = files;
+          newSocket->socket_write((string)result.dump());
+        }
+      } catch(json::exception& e) {}
+
 
     }
   }
