@@ -61,11 +61,17 @@ class Cube {
       int red = 0;
       int green = 0;
       int blue = 0;
-      
+
       void random(){
         red = rand()%16;
         green = rand()%16;
         blue = rand()%16;
+      }
+
+      void set(int r, int g, int b){
+        red = r;
+        green = g;
+        blue = b;
       }
     };
 

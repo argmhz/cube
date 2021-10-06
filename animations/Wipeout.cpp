@@ -5,50 +5,68 @@
 
 class Wipeout : public Animation {
 
-  unsigned long start;
- 
 
-  void draw(Cube *c) {
-    int speed = 12000;
-    int xxx=0, yyy=0, zzz=0;
+  int speed = 12000;
+
+
+  int xxx=0, yyy=0, zzz=0;
   int fx=random(8), fy=random(8), fz=random(8), direct, fxm=1, fym=1, fzm=1, fxo=0, fyo=0, fzo=0;
   int  ftx=random(8), fty=random(8), ftz=random(8), ftxm=1, ftym=1, ftzm=1, ftxo=0, ftyo=0, ftzo=0;
   int select, rr, gg, bb, rrt, ggt, bbt;
+
+
+  void onDataUpdate(json data){
+
+    if(data["speed"].is_number()){
+      speed = data["speed"].get<int>();
+    }
+
+    if(data["random_color"].is_number()){
+      changeColor();
+    }
+
+  }
+
+  void changeColor(){
+
+    select=random(3);
+ if(select==0){
+   rr=random(15);
+   gg=random(15);
+   bb=0;}
+  if(select==1){
+   rr=random(15);
+   gg=0;
+   bb=random(15);}
+  if(select==2){
+   rr=0;
+   gg=random(15);
+   bb=random(15);}
+
+    select=random(3);
+ if(select==0){
+   rrt=random(15);
+   ggt=random(15);
+   bbt=0;}
+  if(select==1){
+   rrt=random(15);
+   ggt=0;
+   bbt=random(15);}
+  if(select==2){
+   rrt=0;
+   ggt=random(15);
+   bbt=random(15);}
+  }
+
+  void draw(Cube *c) {
+
   c->clear();
   c->update();
 
-       select=random(3);
-    if(select==0){
-      rr=random(15);
-      gg=random(15);
-      bb=0;}
-     if(select==1){
-      rr=random(15);
-      gg=0;
-      bb=random(15);}
-     if(select==2){
-      rr=0;
-      gg=random(15);
-      bb=random(15);}
-
-       select=random(3);
-    if(select==0){
-      rrt=random(15);
-      ggt=random(15);
-      bbt=0;}
-     if(select==1){
-      rrt=random(15);
-      ggt=0;
-      bbt=random(15);}
-     if(select==2){
-      rrt=0;
-      ggt=random(15);
-      bbt=random(15);}
+  changeColor();
 
 
-  while(isRunning()){
-    // std::cout << random(3) << std::endl;
-    //fx=random(8); fy=random(8); fz=random(8);
+  while(isRunning()){ 
 
     c->set(fxo, fyo, fzo, 0, 0, 0);
     c->set(fxo, fyo, fzo+1, 0, 0, 0);
