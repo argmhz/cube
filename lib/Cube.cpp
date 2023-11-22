@@ -1,5 +1,6 @@
 #pragma once
 #include "Cube.h"
+#include "helpers.h"
 #include <math.h>
 
 void Cube::plane(int axis,int index,int r,int g,int b){
@@ -287,6 +288,51 @@ void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, in
   }
 }
 
+void Cube::rotate(int axis, int degree) {
+
+  // x = cos(degree) * x - sin(degree) * y
+  // y = sin(degree) * x + cos(degree) * y
+  int _x, _y,_z;
+  Color n[8][8][8];
+  for (size_t z = 0; z < 8; z++) {
+    for (size_t x = 0; x < 8; x++) {
+      for (size_t y = 0; y < 8; y++) {
+        switch (axis) {
+          case AXIS_X:
+            _x = x;
+            _y = y * cos(degree) - z * sin(degree);
+            _z = y * sin(degree) + z * cos(degree);
+          break;
+          case AXIS_Y:
+            _x = z * sin(degree) + x * cos(degree);
+            _y = y;
+            _z = y * cos(degree) - x * sin(degree);
+          break;
+          case AXIS_Z:
+            _x = x * cos(degree) - y * sin(degree);
+            _y = x * sin(degree) + y * cos(degree);
+            _z = z;
+          break;
+        }
+        Color c = get(x,y,z);
+        // std::cout << _x << " " << _y << " " << _z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
+        n[_x][_y][_z] = c;
+      }
+    }
+  }
+  clear();
+  for (int z = 0; z < 8; z++) {
+    for (int x = 0; x < 8; x++) {
+      for (int y = 0; y < 8; y++) {
+        Color c = n[x][y][z];
+        std::cout << x << " " << y << " " << z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
+        set(x,y,z,c);
+      }
+    }
+  }
+}
+
+
 // var rotateZ3D = function(theta) {
 //    var sinTheta = sin(theta);
 //    var cosTheta = cos(theta);
@@ -299,23 +345,23 @@ void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, in
 //    }
 // };
 //
-// void Cube::rotateZ(int degree){
-//   float sinT = sin(degree);
-//   float cosT = cos(degree);
-//
-//   for (size_t x = 0; x < 8; x++) {
-//     for (size_t y = 0; y < 8; y++) {
-//       for (size_t z = 0; z < 8; z++) {
-//
-//         set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
-//         // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
-//          std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
-//         // x=4*sin(j)*cos(i);
-//         // y=4*sin(j)*sin(i);
-//         // z=4*cos(j);
-//       }
-//     }
-//   }
-// }
+void Cube::rotateZ(int degree){
+  float sinT = sin(degree);
+  float cosT = cos(degree);
+
+  for (size_t x = 0; x < 8; x++) {
+    for (size_t y = 0; y < 8; y++) {
+      for (size_t z = 0; z < 8; z++) {
+
+        set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
+        // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
+         std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
+        // x=4*sin(j)*cos(i);
+        // y=4*sin(j)*sin(i);
+        // z=4*cos(j);
+      }
+    }
+  }
+}
 // i and j are angles like latitude and longitude
 // x=radius*sin(j)*cos(i); y=radius*sin(j)*sin(i); z=radius*cos(j);

@@ -122,6 +122,15 @@ class Cube {
       }
     }
 
+    void setIndex(int layer, int index, int r, int g, int b){
+      if(layer < 8 && layer >= 0 && index < 64 && index >= 0){
+        int i = index*3;
+        frontBuffer[layer][tr[i]] = r;
+        frontBuffer[layer][tr[i+1]] = g;
+        frontBuffer[layer][tr[i+2]] = b;
+      }
+    }
+
     void set(int x, int y, int z, Cube::Color color){
       set(x,y,x, color.red, color.green, color.blue);
     }
@@ -231,6 +240,8 @@ class Cube {
     void box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b);
     void boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
     void hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
+    void rotateZ(int degrees);
+    void rotate(int axis, int degree);
 
   private:
     void createFrame(){
