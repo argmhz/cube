@@ -6,6 +6,8 @@
 #include "../lib/helpers.h"
 #include "../lib/json.hpp"
 #include "../lib/AniManager.cpp"
+#include "../lib/CommandHandler.h"
+#include "../lib/AnimationCommandHandler.h"
 #include "../animations/Text.cpp"
 #include "../lib/remotehelpers.cpp"
 #include "../lib/Socket.cpp"
@@ -27,6 +29,8 @@ void response(std::string type, std::string responseMessage){
 
 
 void incoming(){
+  AnimationCommandHandler handler(*manager, selectedAnimaiton, "./bin/animations");
+
   string ip = "localhost";
   string port = "1234";
 
@@ -54,28 +58,10 @@ void incoming(){
       string buffer;
       newSocket->socket_read(buffer, 1024); //Read 1024 bytes of the stream
 
-      try {
-        json command = json::parse(buffer);
-
-        if(command["action"] == "select"){
-          selectedAnimaiton = (std::string)command["animation"];
-          manager->getAnimation().stop();
-        }
-
-        if(command["action"] == "set") {
-          manager->getAnimation().onDataUpdate(command);
-        }
-
-        if(command["action"] == "options"){
-          std::vector<string> files = manager->getAnimationsFiles("./bin/animations");
-          json result;
-          result["action"] = "options";
-          result["animations"] = files;
-          newSocket->socket_write((string)result.dump());
-        }
-      } catch(json::exception& e) {}
-
-
+      std::optional<json> reply = handleCommand(buffer, handler);
+      if (reply) {
+        newSocket->socket_write(reply->dump());
+      }
     }
   }
 
