@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <string>
 #include "CommandHandler.h"
-#include "AniManager.cpp"
+#include "../animation/AniManager.h"
 
 // Extracts just the animation name from whatever the client sent -- a bare
 // name ("ColorWheel"), "ColorWheel.so", or the historical full path

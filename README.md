@@ -21,32 +21,43 @@ AniManager  ── indlæser/skifter animationer (dlopen af .so-filer)
 Animation-plugins (animations/*.cpp)  ── tegner ind i Cube'ens buffer
    │
    ▼
-Cube (lib/Cube.h/.cpp)  ── framebuffer + bit-angle-modulation-rendering over SPI/GPIO
+Cube (lib/core/Cube.h + CubeBuffer.h/.cpp)  ── framebuffer + bit-angle-modulation-rendering over SPI/GPIO
    │
    ▼
 Fysisk LED-kube
 ```
 
-- **`lib/Cube.h` / `lib/Cube.cpp`** — kernen. Holder en 8×8×8 voxel-framebuffer og driver skiftregistrene over SPI via `bcm2835`-biblioteket med bit-angle modulation (BAM) for farvedybde. Tilbyder tegnehjælpere som `set`, `line`, `plane`, `box`, `sphere`, `shift`, `rotate` osv. Kører sin egen renderer-tråd (`cube->start()`).
-- **`lib/Animation.hpp`** — basisklasse for animationer. En animation implementerer `draw(Cube*)` og valgfrit `onDataUpdate(json)` til at modtage live parameterændringer (farve, hastighed, tekst osv.).
-- **`lib/AniManager.cpp`** — indlæser animationer som delte biblioteker (`dlopen`/`dlsym` på `create()`/`destroy()`) og kan hot-swappe den kørende animation uden at genstarte processen.
+- **`lib/core/Cube.h`** — hardware-laget: driver skiftregistrene over SPI via `bcm2835`-biblioteket med bit-angle modulation (BAM) for farvedybde, arver al voxel-buffer/geometri fra `CubeBuffer`. Kører sin egen renderer-tråd (`cube->start()`).
+- **`lib/core/CubeBuffer.h`/`.cpp`** — den rene, hardware-fri 8×8×8 voxel-buffer og geometri (`set`, `line`, `plane`, `box`, `sphere`, `shift`, `rotate` osv.) — ingen `bcm2835`, testes uden Pi (se `tests/`).
+- **`lib/core/Vec3.h`** — rotationsmatricer brugt af `CubeBuffer::rotate()`.
+- **`lib/animation/Animation.h`** — basisklasse for animationer. En animation implementerer `draw(Cube*)` og valgfrit `onDataUpdate(json)` til at modtage live parameterændringer (farve, hastighed, tekst osv.).
+- **`lib/animation/AniManager.h`** — indlæser animationer som delte biblioteker (`dlopen`/`dlsym` på `create()`/`destroy()`) og kan hot-swappe den kørende animation uden at genstarte processen.
+- **`lib/animation/Font.h`** — bitmap-font-rendering, bruges af `Text`/`ColorText`-animationerne.
 - **`animations/*.cpp`** — ca. 30 animationer (FadeColor, ColorWheel, BouncyvTwo, Sparkles, Fireworks, DoubleHelix, Text m.fl.). Hver fil kompileres til sit eget `.so`-plugin.
 - **`apps/*.cpp`** — de eksekverbare programmer (se "Kørsel" nedenfor).
-- **`resources/`** — genererede data (bitmap-fonte, formdata) brugt af bl.a. `Text`-animationen.
-- **`lib/Socket.h`/`.cpp`** — en simpel BSD-socket-wrapper (oprindeligt en generisk "SocketServer"-skabelon), bruges som netværkslaget i `apps/socket.cpp`.
+- **`resources/`** — bitmap-font-data brugt af `lib/animation/Font.h`.
+- **`lib/net/`** — `Socket.h`/`.cpp` (BSD-socket-wrapper), `CommandHandler.h`/`AnimationCommandHandler.h` (JSON-protokol-dispatch), `ConnectionLoop.h` (server-en-klient-løkken), `Config.h` (kommandolinje-flag). Se [ARCHITECTURE.md](ARCHITECTURE.md) for detaljer.
 
 ## Mappestruktur
 
 | Sti | Indhold |
 |---|---|
-| `lib/` | Kernebibliotek: `Cube`, `Animation`, `AniManager`, `Socket`, hjælpefunktioner (`helpers.h`), JSON-bibliotek (`json.hpp`, vendoret nlohmann/json) |
+| `lib/core/` | Selve kube-motoren: `Cube`, `CubeBuffer`, `Vec3` |
+| `lib/animation/` | Animations-plugin-systemet: `Animation`, `AniManager`, `Font` |
+| `lib/net/` | Netværk/protokol: `Socket`, `CommandHandler`, `AnimationCommandHandler`, `ConnectionLoop`, `Config` |
+| `lib/vendor/` | Tredjeparts, vendorede biblioteker: `json.hpp` (nlohmann/json), `doctest.h` |
+| `lib/` (roden) | Generelle hjælpere der ikke hører til i noget af ovenstående: `helpers.h`, `Log.h`, `remotehelpers.h` |
 | `animations/` | Et `.cpp`-plugin pr. animation |
 | `apps/` | Eksekverbare entry points (socket-server, enkelt-animation, cyklus, tekst) |
-| `resources/` | Genererede font- og formdata |
+| `resources/` | Font-bitmap-data |
+| `tests/` | Hardware-fri testsuite (`make check`) |
+| `deploy/` | `systemd`-service til drift på Pi'en |
 | `bin/` | Byggeoutput (`.gitignore`'et — oprettes lokalt, se Opsætning) |
-| `Makefile` | Bygger alle animationer til `.so` og alle apps til eksekverbare filer |
+| `Makefile` | Bygger alle animationer til `.so` og alle apps til eksekverbare filer, samt testsuiten (`make check`) |
 | `generate.sh` | Scaffolder en ny animationsfil ud fra en skabelon |
 | `run.sh` | Genvej til at køre én animation direkte (`sudo bin/one bin/animations/<navn>.so`) |
+
+Hvorfor `lib/core/CubeBuffer` og `lib/net/Socket` har både en `.h` og en `.cpp`, mens resten af `lib/` kun har `.h`-filer: se [ARCHITECTURE.md](ARCHITECTURE.md#header-cpp-organisering).
 
 ## Hardware & afhængigheder
 
@@ -80,6 +91,14 @@ Byg skal køres direkte på (eller krydskompileret til) en Raspberry Pi, da kode
 | `sudo bin/all` | Cykler igennem alle byggede animationer i `bin/animations/`. |
 | `sudo bin/ColorText "tekst"` | Viser en rullende tekststreng i farveskiftende gradient. |
 | `sudo bin/test` | Demoprogram, roterer en linje om X-aksen. |
+
+`bin/socket` tager valgfrie flag, hvis standardværdierne (`localhost:1234`, `./bin/animations`) ikke passer:
+
+```bash
+sudo bin/socket --host 0.0.0.0 --port 1234 --animations-dir ./bin/animations
+```
+
+Se [deploy/README.md](deploy/README.md) for at køre serveren som en `systemd`-service.
 
 ## Netværksprotokol
 

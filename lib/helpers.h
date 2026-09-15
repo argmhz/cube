@@ -5,7 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include <vector>
-#include "CubeBuffer.h"
+#include "core/CubeBuffer.h"
 
 #define PI 3.14159265
 

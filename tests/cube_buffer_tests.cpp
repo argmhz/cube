@@ -1,5 +1,5 @@
-#include "../lib/doctest.h"
-#include "../lib/CubeBuffer.h"
+#include "../lib/vendor/doctest.h"
+#include "../lib/core/CubeBuffer.h"
 
 // These tests exercise the pure voxel-buffer/geometry logic in CubeBuffer.
 // No hardware, no root, no Raspberry Pi involved -- safe to run anywhere.

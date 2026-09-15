@@ -3,8 +3,8 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "json.hpp"
-#include "Log.h"
+#include "../vendor/json.hpp"
+#include "../Log.h"
 
 using json = nlohmann::json;
 

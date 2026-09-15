@@ -2,17 +2,18 @@
 #include <thread>
 #include <mutex>
 #include <string>
-#include "../lib/Cube.cpp"
+#include "../lib/core/Cube.h"
 #include "../lib/helpers.h"
-#include "../lib/json.hpp"
-#include "../lib/AniManager.cpp"
-#include "../lib/CommandHandler.h"
-#include "../lib/AnimationCommandHandler.h"
-#include "../lib/ConnectionLoop.h"
+#include "../lib/vendor/json.hpp"
+#include "../lib/animation/AniManager.h"
+#include "../lib/net/CommandHandler.h"
+#include "../lib/net/AnimationCommandHandler.h"
+#include "../lib/net/ConnectionLoop.h"
 #include "../lib/Log.h"
+#include "../lib/net/Config.h"
 #include "../animations/Text.cpp"
-#include "../lib/remotehelpers.cpp"
-#include "../lib/Socket.cpp"
+#include "../lib/remotehelpers.h"
+#include "../lib/net/Socket.h"
 
 
 using json = nlohmann::json;
@@ -20,13 +21,13 @@ using json = nlohmann::json;
 Cube * cube = new Cube;
 AniManager *manager;
 
-std::string selectedAnimaiton = "./bin/animations/Text.so";
+std::string selectedAnimaiton;
 
-void incoming(){
-  AnimationCommandHandler handler(*manager, selectedAnimaiton, "./bin/animations");
+void incoming(const Config &config){
+  AnimationCommandHandler handler(*manager, selectedAnimaiton, config.animationsDir);
 
-  string ip = "localhost";
-  string port = "1234";
+  string ip = config.host;
+  string port = config.port;
 
   Socket *masterSocket = new Socket(AF_INET,SOCK_STREAM,0); //AF_INET (Internet mode) SOCK_STREAM (TCP mode) 0 (Protocol any)
   int optVal = 1;
@@ -66,12 +67,15 @@ int main(int argc, char *argv[]){
   setbuf(stdin, NULL);
   srand (time(NULL));
 
+  Config config = parseArgs(std::vector<std::string>(argv + 1, argv + argc));
+  selectedAnimaiton = config.animationsDir + "/Text.so";
+
   // instantiate Animation manager before any thread can touch it
   manager = new AniManager(cube);
 
   // Start cube
   std::thread cubeThread = cube->start();
-  std::thread incomingThread(incoming);
+  std::thread incomingThread([&config]{ incoming(config); });
 
 
   Text *t = new Text;

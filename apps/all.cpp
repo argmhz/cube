@@ -3,8 +3,8 @@
 #include <string>
 #include <filesystem>
 #include <vector>
-#include "../lib/Cube.cpp"
-#include "../lib/AniManager.cpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/AniManager.h"
 
 Cube * cube;
 AniManager * manager;

@@ -1,5 +1,5 @@
-#include "../lib/doctest.h"
-#include "../lib/AniManager.cpp"
+#include "../lib/vendor/doctest.h"
+#include "../lib/animation/AniManager.h"
 
 // AniManager's methods are all defined inline inside the class body (same
 // as every apps/*.cpp already does), so this file can #include the .cpp

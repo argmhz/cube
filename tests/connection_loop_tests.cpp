@@ -1,5 +1,5 @@
-#include "../lib/doctest.h"
-#include "../lib/ConnectionLoop.h"
+#include "../lib/vendor/doctest.h"
+#include "../lib/net/ConnectionLoop.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <thread>

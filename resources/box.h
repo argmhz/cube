@@ -1,3 +1,4 @@
+#pragma once
 /**
  * 8x8 monochrome bitmap fonts for rendering
  * Author: Daniel Hepper <daniel@hepper.net>
@@ -20,7 +21,7 @@
 
 // Constant: font8x8_2500
 // Contains an 8x8 font map for unicode points U+2500 - U+257F (box drawing)
-char box[128][8] = {
+inline char box[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},   // U+2500 (thin horizontal)
     { 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00},   // U+2501 (thick horizontal)
     { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08},   // U+2502 (thin vertical)

@@ -1,7 +1,7 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
-#include "../lib/json.hpp"
+#include "../lib/vendor/json.hpp"
 
 class Rain : public Animation {
 

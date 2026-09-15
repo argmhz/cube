@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
-#include "Animation.hpp"
+#include "Animation.h"
 
 
 class AniManager {

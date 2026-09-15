@@ -1,4 +1,4 @@
-#include "../lib/doctest.h"
+#include "../lib/vendor/doctest.h"
 #include "../lib/helpers.h"
 #include <cstdlib>
 

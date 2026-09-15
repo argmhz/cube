@@ -1,6 +1,6 @@
-#include "../lib/doctest.h"
-#include "../lib/CommandHandler.h"
-#include "../lib/AnimationCommandHandler.h"
+#include "../lib/vendor/doctest.h"
+#include "../lib/net/CommandHandler.h"
+#include "../lib/net/AnimationCommandHandler.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "../resources/fonts.cpp"
-// #include "../resources/box.cpp"
+#include "../../resources/fonts.h"
+// #include "../../resources/box.h"
 
 class Font {
 

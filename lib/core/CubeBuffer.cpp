@@ -1,6 +1,6 @@
 #pragma once
 #include "CubeBuffer.h"
-#include "helpers.h"
+#include "../helpers.h"
 #include "Vec3.h"
 #include <math.h>
 #include <iostream>
