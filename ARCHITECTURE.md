@@ -8,6 +8,7 @@ Dette dokument lægger vejen fra det nuværende setup til et mere modent setup, 
 - ✅ Hardware-fri testsuite (`make check`, `tests/`), ingen `bcm2835`/`sudo`/Pi krævet.
 - ✅ De 9 bugs fundet under code review er rettet og dækket af tests.
 - ✅ Fase 1 (nedenfor): korrekt, matrix-baseret 3D-rotation.
+- ✅ Fase 2 (nedenfor): udtrukket, testbar kommando-dispatch; path traversal i `select` lukket.
 
 ## Fase 1: Korrekt 3D-matematik
 
@@ -17,8 +18,7 @@ Naturlige udvidelser herfra, når der er appetit på det: flere primitiver (cyli
 
 ## Fase 2: Protokol & sikkerhed
 
-- Udtræk JSON-kommando-dispatchen i `apps/socket.cpp`s `incoming()` (som i dag blander parsing, det globale `manager`/`cube`-state, og selve socket-I/O) til en selvstændig klasse/funktion der tager en kommando ind og returnerer/udfører en handling — testbar uden en levende socket. Nævnt allerede i test-infrastruktur-omgangen som en naturlig fase 2.
-- Valider `select`-kommandoens `animation`-felt: i dag sendes en rå sti direkte til `dlopen()`. Skift til kun at acceptere et animations-*navn* (uden sti/`.so`), som serveren selv slår op i `./bin/animations/` — undgår at en vilkårlig sti kan blive åbnet, og matcher allerede hvordan `cube-client` viser animationsnavne (stripped for sti/endelse).
+`lib/CommandHandler.h` (ren dispatch, `handleCommand()`) og `lib/AnimationCommandHandler.h` (den rigtige implementering, wrapper om `AniManager`) udtrækker JSON-kommando-håndteringen fra `apps/socket.cpp`s `incoming()` til noget testbart uden en levende socket. `resolveAnimationPath()` henter kun animations-*navnet* ud af hvad `select` end sender (bart navn, `"X.so"`, eller den hidtidige fulde sti), og bygger selv den fulde sti udelukkende inden for `./bin/animations/` — en `select` med fx `"../../etc/passwd"` kan derfor aldrig give `dlopen()` en sti uden for animations-mappen. `options`-svaret sender nu samme bare navne. `cube-client` krævede ingen ændringer (den ekkoer altid `options`-svaret uændret tilbage i `select`).
 
 ## Fase 3: Driftssikkerhed
 
