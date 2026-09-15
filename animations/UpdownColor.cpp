@@ -56,7 +56,7 @@ class UpdownColor : public Animation {
 
         std::random_shuffle(std::begin(leds),std::end(leds));
 
-        for (i = 64; i >= 0; i--)
+        for (i = 63; i >= 0; i--)
         {
 
             x = (int)leds[i]/8;

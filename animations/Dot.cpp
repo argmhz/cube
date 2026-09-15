@@ -76,15 +76,20 @@ class Dot : public Animation {
   }
 
   void generateMouse(){
-    mouse.x = rand() % 8;
-    mouse.y = rand() % 8;
-    mouse.z = rand() % 8;
+    bool collision;
+    do {
+      mouse.x = rand() % 8;
+      mouse.y = rand() % 8;
+      mouse.z = rand() % 8;
 
-    for (auto&& point : snake) {
-      if(point.x == mouse.x && point.y == mouse.y && point.z == mouse.z){
-        generateMouse();
+      collision = false;
+      for (auto&& point : snake) {
+        if(point.x == mouse.x && point.y == mouse.y && point.z == mouse.z){
+          collision = true;
+          break;
+        }
       }
-    }
+    } while (collision);
   }
 
   bool isMouseHit(){

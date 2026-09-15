@@ -28,6 +28,7 @@ class Folder: public Animation {
     for (xx = 0; xx < 8; xx++) {
       oldpullback[xx] = 0;
       pullback[xx] = 0;
+      LED_Old[xx] = 0;
     }
 
     while (isRunning()) {
