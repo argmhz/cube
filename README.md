@@ -108,9 +108,10 @@ Se hvordan en animation ser ud i 3D uden den fysiske kube — nyttigt når man u
 ```bash
 make sim
 ./bin/simulator --animation Prism --seconds 10 --out /tmp/prism.jsonl
+node sim/viewer/server.js
 ```
 
-Åbn derefter [Cube Playback](https://claude.ai/artifact/BiwxqNsU6iw7SapEsNCqnR) og indlæs `.jsonl`-filen. Se [sim/README.md](sim/README.md) for detaljer.
+Åbn derefter `http://localhost:8420` — en helt selvstændig, offline-kørende 3D-afspiller (ingen Claude, ingen internet nødvendig). Se [sim/README.md](sim/README.md) for detaljer.
 
 ## Netværksprotokol
 

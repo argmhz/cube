@@ -28,7 +28,13 @@ Bygger hver animation som en almindelig x86-`.so` i `bin/sim-animations/`, samt 
 
 **3. Se optagelsen i 3D:**
 
-Åbn [Cube Playback](https://claude.ai/artifact/BiwxqNsU6iw7SapEsNCqnR) og klik "Indlæs .jsonl" — vælg filen du lige optog. Træk for at rotere, scroll for at zoome, brug afspil/pause/scrub-linjen til at gå frem og tilbage i optagelsen.
+```bash
+node sim/viewer/server.js
+```
+
+Åbn derefter `http://localhost:8420` i browseren og klik "Indlæs .jsonl" — vælg filen du lige optog. Træk for at rotere, scroll for at zoome, brug afspil/pause/scrub-linjen til at gå frem og tilbage i optagelsen. Siden åbner med en indbygget Prism-optagelse som eksempel.
+
+`sim/viewer/` er en helt selvstændig, offline-kørende side — ingen `npm install`, ingen forbindelse til Claude eller internettet nødvendig (Three.js ligger vendoret i `sim/viewer/public/vendor/`). Et andet portnummer kan gives som argument: `node sim/viewer/server.js 3000`.
 
 ## Begrænsninger
 

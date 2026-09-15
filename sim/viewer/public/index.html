@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cube Playback</title>
+<style>
+  :root {
+    --bg: #0a0e16;
+    --bg-raised: #0d131f;
+    --panel: #141c2b;
+    --border: #26344a;
+    --border-soft: #1c2739;
+    --text: #e8edf5;
+    --text-dim: #8a97ab;
+    --text-faint: #566175;
+    --accent: #4dd2ff;
+    --accent-dim: #1d3a4d;
+    --accent-text: #071018;
+    --track: #1c2739;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 16px;
+    gap: 14px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-soft);
+    padding-block-end: 14px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  header p {
+    margin: 4px 0 0;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    max-width: 60ch;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .viewport-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 38%, #0f1626 0%, var(--bg-raised) 62%, #060910 100%);
+    min-height: 420px;
+    touch-action: none;
+  }
+
+  .viewport-wrap canvas { display: block; width: 100%; height: 100%; }
+
+  .viewport-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    color: var(--text-faint);
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  .viewport-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(10, 14, 22, 0.7);
+    border: 1px solid var(--border-soft);
+    border-radius: 100px;
+    padding: 4px 10px 4px 8px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  .viewport-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px 1px var(--accent);
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .card h2 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .source-name {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    word-break: break-word;
+  }
+
+  .source-meta {
+    color: var(--text-dim);
+    font-size: 12.5px;
+  }
+
+  .file-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible, input:focus-visible, input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  button.primary:hover { color: var(--accent-text); filter: brightness(1.08); }
+
+  #fileInput { display: none; }
+
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .play-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    border-radius: 50%;
+  }
+  .play-btn svg { width: 15px; height: 15px; }
+
+  .scrub {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 100px;
+    background: var(--track);
+    margin: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .scrub-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+
+  .stat-label {
+    font-size: 10.5px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .stat-value {
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: none;
+  }
+
+  .legend-dot.off { background: #2a3446; border: 1px solid #38445a; }
+  .legend-dot.on {
+    background: linear-gradient(135deg, #ff5f6d, #4dd2ff);
+    box-shadow: 0 0 6px 1px rgba(77, 210, 255, 0.5);
+  }
+
+  footer {
+    color: var(--text-faint);
+    font-size: 12px;
+    text-align: center;
+    padding-block: 4px 2px;
+  }
+
+  footer a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div>
+      <h1>Cube <span>Playback</span></h1>
+      <p>Afspiller optagne frames fra <code class="mono">bin/simulator</code> &mdash; hvert frame er en fuld snapshot af kubens 512 voxels (8&times;8&times;8), 0&ndash;15 lysstyrke pr. farvekanal via bit-angle modulation, taget ~30 gange i sekundet.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="viewport-wrap" id="viewportWrap">
+      <div class="viewport-badge" id="liveBadge"><span class="dot"></span><span id="liveBadgeText">Afspiller eksempel</span></div>
+      <div class="viewport-hint">Træk for at rotere &middot; Scroll for at zoome</div>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <h2>Optagelse</h2>
+        <div class="source-name" id="sourceName">Prism (eksempel)</div>
+        <div class="source-meta" id="sourceMeta">&mdash;</div>
+        <div class="file-row">
+          <button class="primary" id="loadBtn" style="flex:1">Indlæs .jsonl</button>
+          <input type="file" id="fileInput" accept=".jsonl,.json,.txt">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Afspilning</h2>
+        <div class="transport">
+          <button class="play-btn" id="playBtn" aria-label="Afspil/pause" aria-pressed="true">
+            <svg id="playIcon" viewBox="0 0 16 16" fill="currentColor" hidden><path d="M3 2l11 6-11 6V2z"/></svg>
+            <svg id="pauseIcon" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="4" height="12" rx="1"/><rect x="9" y="2" width="4" height="12" rx="1"/></svg>
+          </button>
+          <div class="scrub">
+            <input type="range" id="scrub" min="0" max="0" value="0" step="1" aria-label="Frame">
+            <div class="scrub-labels mono">
+              <span id="timeNow">0.00s</span>
+              <span id="frameCount">frame 0 / 0</span>
+              <span id="timeTotal">0.00s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Dette frame</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">Tændte voxels</div>
+            <div class="stat-value mono" id="litCount">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Billedrate</div>
+            <div class="stat-value mono" id="fpsValue">&mdash;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Tegnforklaring</h2>
+        <div class="legend">
+          <div class="legend-row"><span class="legend-dot off"></span>Slukket voxel (vist svagt, så gitteret ses)</div>
+          <div class="legend-row"><span class="legend-dot on"></span>Tændt voxel &mdash; farve = RGB fra optagelsen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Genereret offline med <span class="mono">bin/simulator</span> &mdash; ingen forbindelse til den fysiske kube eller Raspberry Pi&apos;en.</footer>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Three.js scene ----------
+
+  const wrap = document.getElementById("viewportWrap");
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  wrap.appendChild(renderer.domElement);
+
+  // Faint boundary wireframe so the 8x8x8 extent reads clearly in 3D.
+  const GRID = 8;
+  const HALF = (GRID - 1) / 2;
+  const boundsGeo = new THREE.BoxGeometry(GRID, GRID, GRID);
+  const boundsEdges = new THREE.EdgesGeometry(boundsGeo);
+  const bounds = new THREE.LineSegments(
+    boundsEdges,
+    new THREE.LineBasicMaterial({ color: 0x223049, transparent: true, opacity: 0.9 })
+  );
+  scene.add(bounds);
+
+  // Floor grid for depth cues.
+  const floor = new THREE.GridHelper(GRID * 1.6, 12, 0x1c2739, 0x141b28);
+  floor.position.y = -HALF - 1.1;
+  scene.add(floor);
+
+  const VOXELS = GRID * GRID * GRID;
+  const sphereGeo = new THREE.SphereGeometry(0.5, 10, 8);
+  const mesh = new THREE.InstancedMesh(sphereGeo, new THREE.MeshBasicMaterial({ toneMapped: false }), VOXELS);
+  mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(VOXELS * 3), 3);
+  scene.add(mesh);
+
+  const dummy = new THREE.Object3D();
+  const color = new THREE.Color();
+
+  // voxel order matches sim/simulator.cpp: z outer, y middle, x inner
+  let idx = 0;
+  const positions = [];
+  for (let z = 0; z < GRID; z++) {
+    for (let y = 0; y < GRID; y++) {
+      for (let x = 0; x < GRID; x++) {
+        positions.push([x - HALF, y - HALF, z - HALF]);
+        idx++;
+      }
+    }
+  }
+
+  const OFF_COLOR = new THREE.Color(0x2a3446);
+  const OFF_SCALE = 0.14;
+
+  function applyFrame(voxels) {
+    for (let i = 0; i < VOXELS; i++) {
+      const v = voxels[i] || [0, 0, 0];
+      const r = v[0], g = v[1], b = v[2];
+      const lit = r > 0 || g > 0 || b > 0;
+      const p = positions[i];
+      dummy.position.set(p[0], p[1], p[2]);
+
+      if (lit) {
+        const brightness = Math.max(r, g, b) / 15;
+        const scale = 0.30 + brightness * 0.34;
+        dummy.scale.setScalar(scale);
+        color.setRGB(r / 15, g / 15, b / 15);
+      } else {
+        dummy.scale.setScalar(OFF_SCALE);
+        color.copy(OFF_COLOR);
+      }
+
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, color);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }
+
+  applyFrame([]); // all-off initial state
+
+  // ---------- manual orbit camera (drag to rotate, wheel to zoom) ----------
+
+  let radius = 13, theta = 0.9, phi = 1.15;
+  function updateCamera() {
+    camera.position.set(
+      radius * Math.sin(phi) * Math.sin(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.cos(theta)
+    );
+    camera.lookAt(0, 0, 0);
+  }
+  updateCamera();
+
+  let dragging = false, lastX = 0, lastY = 0;
+  renderer.domElement.addEventListener("pointerdown", (e) => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    renderer.domElement.setPointerCapture(e.pointerId);
+  });
+  renderer.domElement.addEventListener("pointerup", () => dragging = false);
+  renderer.domElement.addEventListener("pointercancel", () => dragging = false);
+  renderer.domElement.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    theta -= (e.clientX - lastX) * 0.006;
+    phi -= (e.clientY - lastY) * 0.006;
+    phi = Math.max(0.25, Math.min(Math.PI - 0.25, phi));
+    lastX = e.clientX; lastY = e.clientY;
+    updateCamera();
+  });
+  renderer.domElement.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    radius = Math.max(7, Math.min(28, radius + e.deltaY * 0.02));
+    updateCamera();
+  }, { passive: false });
+
+  let autoSpin = true;
+  renderer.domElement.addEventListener("pointerdown", () => autoSpin = false);
+
+  function resize() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+
+  function renderLoop() {
+    if (autoSpin) { theta += 0.0016; updateCamera(); }
+    renderer.render(scene, camera);
+    requestAnimationFrame(renderLoop);
+  }
+  renderLoop();
+
+  // ---------- recording / playback state ----------
+
+  const playBtn = document.getElementById("playBtn");
+  const playIcon = document.getElementById("playIcon");
+  const pauseIcon = document.getElementById("pauseIcon");
+  const scrub = document.getElementById("scrub");
+  const timeNow = document.getElementById("timeNow");
+  const timeTotal = document.getElementById("timeTotal");
+  const frameCountEl = document.getElementById("frameCount");
+  const litCountEl = document.getElementById("litCount");
+  const fpsValueEl = document.getElementById("fpsValue");
+  const sourceName = document.getElementById("sourceName");
+  const sourceMeta = document.getElementById("sourceMeta");
+  const liveBadgeText = document.getElementById("liveBadgeText");
+
+  let frames = [];
+  let playing = true;
+  let frameIndex = 0;
+  let lastAdvance = performance.now();
+
+  function fmtTime(ms) {
+    return (ms / 1000).toFixed(2) + "s";
+  }
+
+  function setSource(name, meta) {
+    sourceName.textContent = name;
+    sourceMeta.textContent = meta;
+  }
+
+  function loadFrames(list, label) {
+    frames = list;
+    frameIndex = 0;
+    scrub.max = Math.max(0, frames.length - 1);
+    scrub.value = 0;
+    playing = true;
+    setPlayIcon();
+    liveBadgeText.textContent = label;
+
+    if (frames.length > 1) {
+      const duration = frames[frames.length - 1].t - frames[0].t;
+      const fps = Math.round((frames.length - 1) / (duration / 1000));
+      timeTotal.textContent = fmtTime(duration);
+      fpsValueEl.textContent = "~" + fps + " fps";
+    } else {
+      timeTotal.textContent = "0.00s";
+      fpsValueEl.textContent = "—";
+    }
+    renderFrame();
+  }
+
+  function parseJSONL(text) {
+    return text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  }
+
+  function renderFrame() {
+    if (!frames.length) return;
+    const f = frames[frameIndex];
+    applyFrame(f.voxels);
+    scrub.value = frameIndex;
+    timeNow.textContent = fmtTime(f.t - frames[0].t);
+    frameCountEl.textContent = "frame " + (frameIndex + 1) + " / " + frames.length;
+    const lit = f.voxels.reduce((n, v) => n + ((v[0] || v[1] || v[2]) ? 1 : 0), 0);
+    litCountEl.textContent = lit;
+  }
+
+  function setPlayIcon() {
+    playIcon.hidden = playing;
+    pauseIcon.hidden = !playing;
+    playBtn.setAttribute("aria-pressed", String(playing));
+  }
+
+  playBtn.addEventListener("click", () => {
+    playing = !playing;
+    setPlayIcon();
+    lastAdvance = performance.now();
+  });
+
+  scrub.addEventListener("input", () => {
+    playing = false;
+    setPlayIcon();
+    frameIndex = Number(scrub.value);
+    renderFrame();
+  });
+
+  document.getElementById("loadBtn").addEventListener("click", () => {
+    document.getElementById("fileInput").click();
+  });
+
+  document.getElementById("fileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const list = parseJSONL(reader.result);
+        if (!list.length) throw new Error("empty");
+        setSource(file.name, list.length + " frames");
+        loadFrames(list, "Indlæst fil");
+      } catch (err) {
+        alert("Kunne ikke læse filen som .jsonl-frames. Er det en optagelse fra bin/simulator?");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // playback clock, paced by each frame's own recorded timestamp
+  function tick(now) {
+    if (playing && frames.length > 1) {
+      const f = frames[frameIndex];
+      const next = frames[frameIndex + 1] || frames[0];
+      const wantMs = frameIndex + 1 < frames.length ? next.t - f.t : 200;
+      if (now - lastAdvance >= wantMs) {
+        lastAdvance = now;
+        frameIndex = (frameIndex + 1) % frames.length;
+        renderFrame();
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---------- boot: load the embedded sample recording ----------
+
+  fetch("sample-prism.jsonl")
+    .then((r) => r.text())
+    .then((text) => {
+      const list = parseJSONL(text);
+      setSource("Prism (eksempel)", list.length + " frames · optaget med bin/simulator");
+      loadFrames(list, "Afspiller eksempel");
+    })
+    .catch(() => {
+      setSource("Intet eksempel fundet", "Indlæs en .jsonl-optagelse for at komme i gang");
+      liveBadgeText.textContent = "Venter på data";
+    });
+})();
+</script>
+</body>
+</html>
