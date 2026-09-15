@@ -1,0 +1,17 @@
+[Unit]
+Description=Cube LED animation server
+After=network.target
+
+[Service]
+Type=simple
+# CHANGE /home/pi/cube below to wherever this repo actually lives on the Pi.
+WorkingDirectory=/home/pi/cube
+ExecStart=/home/pi/cube/bin/socket
+Restart=on-failure
+RestartSec=2
+# bcm2835 needs root (or /dev/gpiomem group access, which this project does
+# not currently set up) -- matches the existing `sudo bin/socket` usage.
+User=root
+
+[Install]
+WantedBy=multi-user.target

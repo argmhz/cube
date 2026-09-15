@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "json.hpp"
+#include "Log.h"
 
 using json = nlohmann::json;
 
@@ -24,6 +25,7 @@ inline std::optional<json> handleCommand(const std::string &raw, CommandHandler 
   try {
     json command = json::parse(raw);
     std::string action = command.value("action", "");
+    Log::info("received action=" + action);
 
     if (action == "select") {
       handler.selectAnimation(command.value("animation", ""));
@@ -36,7 +38,7 @@ inline std::optional<json> handleCommand(const std::string &raw, CommandHandler 
       return result;
     }
   } catch (json::exception &e) {
-    // Malformed input from the client -- ignored, as before.
+    Log::warn(std::string("could not parse command: ") + e.what());
   }
   return std::nullopt;
 }

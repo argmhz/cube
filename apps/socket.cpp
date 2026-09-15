@@ -8,6 +8,8 @@
 #include "../lib/AniManager.cpp"
 #include "../lib/CommandHandler.h"
 #include "../lib/AnimationCommandHandler.h"
+#include "../lib/ConnectionLoop.h"
+#include "../lib/Log.h"
 #include "../animations/Text.cpp"
 #include "../lib/remotehelpers.cpp"
 #include "../lib/Socket.cpp"
@@ -19,14 +21,6 @@ Cube * cube = new Cube;
 AniManager *manager;
 
 std::string selectedAnimaiton = "./bin/animations/Text.so";
-
-void response(std::string type, std::string responseMessage){
-  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\n'), responseMessage.end());
-  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\r'), responseMessage.end());
-
-  std::cout << "{\"" << type << "\":" << responseMessage << "}" <<  std::endl;
-}
-
 
 void incoming(){
   AnimationCommandHandler handler(*manager, selectedAnimaiton, "./bin/animations");
@@ -40,37 +34,31 @@ void incoming(){
   masterSocket->socket_set_opt(SOL_SOCKET, SO_REUSEADDR, &optVal); //You can reuse the address and the port
   masterSocket->bind(ip, port); //Bind socket on localhost:1234
   masterSocket->listen(10); //Start listening for incoming connections (10 => maximum of 10 Connections in Queue)
+  Log::info("listening on " + ip + ":" + port);
 
   while (true) {
-    vector<Socket> reads(1);
-    reads[0] = *masterSocket;
-    int seconds = 10; //Wait 10 seconds for incoming Connections
-    if(Socket::select(&reads, NULL, NULL, seconds) < 1){ continue; } else { break; }
-  }
+    // Wait for a client to connect.
+    Socket *newSocket = nullptr;
+    while (!newSocket) {
+      vector<Socket> reads(1);
+      reads[0] = *masterSocket;
+      int seconds = 10; //Wait 10 seconds for incoming connections
+      if(Socket::select(&reads, NULL, NULL, seconds) < 1){ continue; }
 
-  Socket *newSocket = masterSocket->accept();
-
-  while (true) {
-    vector<Socket> reads(1);
-    reads[0] = *newSocket;
-    int seconds = 10; //Wait 10 seconds for input
-    if(Socket::select(&reads, NULL, NULL, seconds) < 1){  continue; } else {
-      string buffer;
-      newSocket->socket_read(buffer, 1024); //Read 1024 bytes of the stream
-
-      std::optional<json> reply = handleCommand(buffer, handler);
-      if (reply) {
-        newSocket->socket_write(reply->dump());
+      Socket *candidate = masterSocket->accept();
+      if (candidate->sock >= 0) {
+        newSocket = candidate;
       }
     }
+
+    Log::info("client connected from " + newSocket->address);
+    serveConnection(*newSocket, handler);
+    Log::info("client disconnected");
+
+    newSocket->socket_shutdown(2);
+    newSocket->close();
+    // Loop back around and wait for the next connection instead of exiting.
   }
-
-  newSocket->socket_shutdown(2);
-  newSocket->close();
-
-  masterSocket->socket_shutdown(2);
-  masterSocket->close();
-
 }
 
 int main(int argc, char *argv[]){
