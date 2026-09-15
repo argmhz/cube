@@ -9,6 +9,7 @@ Dette dokument lægger vejen fra det nuværende setup til et mere modent setup, 
 - ✅ De 9 bugs fundet under code review er rettet og dækket af tests.
 - ✅ Fase 1 (nedenfor): korrekt, matrix-baseret 3D-rotation.
 - ✅ Fase 2 (nedenfor): udtrukket, testbar kommando-dispatch; path traversal i `select` lukket.
+- ✅ Fase 3 (nedenfor): reconnect-loop, rigtig logging, `systemd`-service.
 
 ## Fase 1: Korrekt 3D-matematik
 
@@ -22,9 +23,7 @@ Naturlige udvidelser herfra, når der er appetit på det: flere primitiver (cyli
 
 ## Fase 3: Driftssikkerhed
 
-- `apps/socket.cpp` accepterer i dag præcis én TCP-forbindelse, én gang — falder `cube-client` fra, skal serveren genstartes manuelt. Skal løkke tilbage til `accept()` efter disconnect.
-- En `systemd`-service (`deploy/cube.service`) med `Restart=on-failure` og start ved boot, så serveren ikke kræver manuel opstart efter en Pi-genstart eller et crash.
-- Rigtig logging (kommandoer modtaget, connect/disconnect, fejl) i stedet for tavse `catch(json::exception&){}` og den i dag ubrugte `response()`-funktion.
+`lib/ConnectionLoop.h`s `serveConnection()` opdager nu korrekt når en klient disconnecter (`socket_read() <= 0`) og returnerer, så `apps/socket.cpp`s `incoming()` kan løkke tilbage til `accept()` i stedet for at kræve en manuel genstart af `bin/socket`. `lib/Log.h` giver leveled logging til stderr (fanges af `journalctl` under systemd) — modtagne handlinger, connect/disconnect, og JSON-parse-fejl logges nu i stedet for at forsvinde tavst. `deploy/cube.service` + `deploy/README.md` giver en `systemd`-service med `Restart=on-failure` og auto-start ved boot (kræver at du retter pladsholder-stien til jeres rigtige Pi-sti før installation).
 
 ## Fase 4: Konfiguration & tilstand
 
