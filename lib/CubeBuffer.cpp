@@ -1,6 +1,7 @@
 #pragma once
 #include "CubeBuffer.h"
 #include "helpers.h"
+#include "Vec3.h"
 #include <math.h>
 #include <iostream>
 
@@ -291,35 +292,24 @@ void CubeBuffer::boxOutline(int startx, int starty, int startz, int endx, int en
 
 void CubeBuffer::rotate(int axis, int degree) {
 
-  // x = cos(degree) * x - sin(degree) * y
-  // y = sin(degree) * x + cos(degree) * y
+  // Rotates around the cube's own center (3.5,3.5,3.5 -- the middle of the
+  // 0..7 lattice), not the corner (0,0,0), using the standard rotation
+  // matrices in Vec3.h instead of a hand-derived formula per axis.
+  const double CENTER = 3.5;
   double radians = degree * PI / 180.0;
-  double cosT = cos(radians);
-  double sinT = sin(radians);
-  int _x, _y,_z;
+
   Color n[8][8][8];
   for (size_t z = 0; z < 8; z++) {
     for (size_t x = 0; x < 8; x++) {
       for (size_t y = 0; y < 8; y++) {
-        switch (axis) {
-          case AXIS_X:
-            _x = x;
-            _y = (int)round(y * cosT - z * sinT);
-            _z = (int)round(y * sinT + z * cosT);
-          break;
-          case AXIS_Y:
-            _x = (int)round(z * sinT + x * cosT);
-            _y = y;
-            _z = (int)round(y * cosT - x * sinT);
-          break;
-          case AXIS_Z:
-            _x = (int)round(x * cosT - y * sinT);
-            _y = (int)round(x * sinT + y * cosT);
-            _z = z;
-          break;
-        }
+        Vec3 centered{ x - CENTER, y - CENTER, z - CENTER };
+        Vec3 rotated = rotateAroundAxis(centered, axis, radians);
+
+        int _x = (int)round(rotated.x + CENTER);
+        int _y = (int)round(rotated.y + CENTER);
+        int _z = (int)round(rotated.z + CENTER);
+
         Color c = get(x,y,z);
-        // std::cout << _x << " " << _y << " " << _z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
         if (_x >= 0 && _x < 8 && _y >= 0 && _y < 8 && _z >= 0 && _z < 8) {
           n[_x][_y][_z] = c;
         }
@@ -338,21 +328,9 @@ void CubeBuffer::rotate(int axis, int degree) {
 }
 
 void CubeBuffer::rotateZ(int degree){
-  float sinT = sin(degree);
-  float cosT = cos(degree);
-
-  for (size_t x = 0; x < 8; x++) {
-    for (size_t y = 0; y < 8; y++) {
-      for (size_t z = 0; z < 8; z++) {
-
-        set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
-        // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
-        // x=4*sin(j)*cos(i);
-        // y=4*sin(j)*sin(i);
-        // z=4*cos(j);
-      }
-    }
-  }
+  // Kept only so any existing caller of rotateZ keeps working; the actual
+  // rotation logic lives in rotate() now, so there is only one to maintain.
+  rotate(AXIS_Z, degree);
 }
 // i and j are angles like latitude and longitude
 // x=radius*sin(j)*cos(i); y=radius*sin(j)*sin(i); z=radius*cos(j);

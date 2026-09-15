@@ -4,6 +4,8 @@ Styresoftware til en fysisk **8×8×8 RGB LED-kube** ("Topper 3D"), bygget omkri
 
 Den webbaserede fjernbetjening til kuben ligger i det separate repo [`cube-client`](../cube-client), som forbinder til denne server.
 
+Se [ARCHITECTURE.md](ARCHITECTURE.md) for status og den planlagte vej mod et mere modent setup.
+
 ## Arkitektur
 
 ```

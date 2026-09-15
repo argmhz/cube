@@ -127,11 +127,43 @@ TEST_CASE("rotate(axis, 0) is a no-op") {
   CHECK(c.blue == 11);
 }
 
+TEST_CASE("rotate() rotates around the cube's center, not the corner (0,0,0)") {
+  CubeBuffer cube;
+  cube.set(3,3,3, 15,15,15); // the voxel nearest the cube's own center
+  cube.rotate(AXIS_Z, 90);
+  // A point already at the center must stay right next to it, not swing
+  // away toward the (0,0,0) corner as it would if rotation used raw
+  // 0..7 coordinates instead of coordinates centered on the cube.
+  CHECK(cube.get(4,3,3).red == 15);
+}
+
 TEST_CASE("rotate(AXIS_Z, 90) rotates a point the expected quarter turn") {
   CubeBuffer cube;
-  cube.set(1,0,4, 15,15,15);
+  cube.set(7,3,3, 15,15,15);
   cube.rotate(AXIS_Z, 90);
-  CHECK(cube.get(0,1,4).red == 15);
+  CHECK(cube.get(4,7,3).red == 15);
+}
+
+TEST_CASE("rotate(AXIS_X, 90) rotates a point the expected quarter turn") {
+  CubeBuffer cube;
+  cube.set(3,7,3, 15,15,15);
+  cube.rotate(AXIS_X, 90);
+  CHECK(cube.get(3,4,7).red == 15);
+}
+
+TEST_CASE("rotate(AXIS_Y, 90) rotates a point the expected quarter turn") {
+  // This is the axis whose hand-derived formula used to mix up y and z.
+  CubeBuffer cube;
+  cube.set(7,3,3, 15,15,15);
+  cube.rotate(AXIS_Y, 90);
+  CHECK(cube.get(3,3,0).red == 15);
+}
+
+TEST_CASE("rotateZ() delegates to rotate(AXIS_Z, ...) and matches it") {
+  CubeBuffer cube;
+  cube.set(7,3,3, 15,15,15);
+  cube.rotateZ(90);
+  CHECK(cube.get(4,7,3).red == 15);
 }
 
 TEST_CASE("rotate() with an extreme angle drops out-of-range voxels instead of corrupting state") {
