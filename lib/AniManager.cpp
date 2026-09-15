@@ -9,7 +9,7 @@
 
 class AniManager {
 private:
-  class Animation *animation;
+  class Animation *animation = nullptr;
   class Cube *cube;
 public:
 
@@ -71,7 +71,9 @@ public:
   }
 
   void stopAnimation(){
-    animation->stop();
+    if(animation){
+      animation->stop();
+    }
   }
 
   Animation &getAnimation(){

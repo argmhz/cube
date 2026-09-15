@@ -27,9 +27,6 @@ void response(std::string type, std::string responseMessage){
 
 
 void incoming(){
-  // instantiate Animation manager
-  manager = new AniManager(cube);
-
   string ip = "localhost";
   string port = "1234";
 
@@ -94,6 +91,9 @@ int main(int argc, char *argv[]){
   setbuf(stdout, NULL);
   setbuf(stdin, NULL);
   srand (time(NULL));
+
+  // instantiate Animation manager before any thread can touch it
+  manager = new AniManager(cube);
 
   // Start cube
   std::thread cubeThread = cube->start();

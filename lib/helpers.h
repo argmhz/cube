@@ -11,7 +11,7 @@
 
 
 inline int random(int min, int max) {
-  return rand() % max + min;
+  return rand() % (max - min) + min;
 }
 
 inline int random(int max) {

@@ -280,7 +280,7 @@ void CubeBuffer::boxOutline(int startx, int starty, int startz, int endx, int en
   for (int i = startx; i <= endx; i++) {
     for (int j = starty; j <= endy; j++) {
       for (int k = startz; k <= endz; k++) {
-        int sum =  (i == startx) + (i == endy) + (j == starty) + (j == endy) + (k == startz) + (k == endz);
+        int sum =  (i == startx) + (i == endx) + (j == starty) + (j == endy) + (k == startz) + (k == endz);
         if (sum >= 2){
           set(i,j,k,r,g,b);
         }
@@ -293,6 +293,9 @@ void CubeBuffer::rotate(int axis, int degree) {
 
   // x = cos(degree) * x - sin(degree) * y
   // y = sin(degree) * x + cos(degree) * y
+  double radians = degree * PI / 180.0;
+  double cosT = cos(radians);
+  double sinT = sin(radians);
   int _x, _y,_z;
   Color n[8][8][8];
   for (size_t z = 0; z < 8; z++) {
@@ -301,23 +304,25 @@ void CubeBuffer::rotate(int axis, int degree) {
         switch (axis) {
           case AXIS_X:
             _x = x;
-            _y = y * cos(degree) - z * sin(degree);
-            _z = y * sin(degree) + z * cos(degree);
+            _y = (int)round(y * cosT - z * sinT);
+            _z = (int)round(y * sinT + z * cosT);
           break;
           case AXIS_Y:
-            _x = z * sin(degree) + x * cos(degree);
+            _x = (int)round(z * sinT + x * cosT);
             _y = y;
-            _z = y * cos(degree) - x * sin(degree);
+            _z = (int)round(y * cosT - x * sinT);
           break;
           case AXIS_Z:
-            _x = x * cos(degree) - y * sin(degree);
-            _y = x * sin(degree) + y * cos(degree);
+            _x = (int)round(x * cosT - y * sinT);
+            _y = (int)round(x * sinT + y * cosT);
             _z = z;
           break;
         }
         Color c = get(x,y,z);
         // std::cout << _x << " " << _y << " " << _z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
-        n[_x][_y][_z] = c;
+        if (_x >= 0 && _x < 8 && _y >= 0 && _y < 8 && _z >= 0 && _z < 8) {
+          n[_x][_y][_z] = c;
+        }
       }
     }
   }
@@ -342,7 +347,6 @@ void CubeBuffer::rotateZ(int degree){
 
         set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
         // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
-         std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
         // x=4*sin(j)*cos(i);
         // y=4*sin(j)*sin(i);
         // z=4*cos(j);

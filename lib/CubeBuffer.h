@@ -109,7 +109,7 @@ class CubeBuffer {
     }
 
     void set(int x, int y, int z, Color color){
-      set(x,y,x, color.red, color.green, color.blue);
+      set(x,y,z, color.red, color.green, color.blue);
     }
 
     Color get(uint8_t x, uint8_t y, uint8_t z){

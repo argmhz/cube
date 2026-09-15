@@ -19,5 +19,5 @@ testPaths = $(wildcard tests/*.cpp)
 # (named "check", not "test", since "test" is already an app built from apps/test.cpp)
 check:
 	mkdir -p bin
-	g++ -std=c++17 -Ilib -o bin/test_runner $(testPaths) lib/CubeBuffer.cpp -pthread
+	g++ -std=c++17 -Ilib -o bin/test_runner $(testPaths) lib/CubeBuffer.cpp lib/Socket.cpp -pthread -ldl -lstdc++fs
 	./bin/test_runner

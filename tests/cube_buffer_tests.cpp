@@ -116,3 +116,41 @@ TEST_CASE("shift() moves voxels one step along an axis and clears the vacated en
   CHECK(cube.get(3,3,2).red == 12);
   CHECK(cube.isOff(3,3,3));
 }
+
+TEST_CASE("rotate(axis, 0) is a no-op") {
+  CubeBuffer cube;
+  cube.set(5,2,6, 9,10,11);
+  cube.rotate(AXIS_Z, 0);
+  CubeBuffer::Color c = cube.get(5,2,6);
+  CHECK(c.red == 9);
+  CHECK(c.green == 10);
+  CHECK(c.blue == 11);
+}
+
+TEST_CASE("rotate(AXIS_Z, 90) rotates a point the expected quarter turn") {
+  CubeBuffer cube;
+  cube.set(1,0,4, 15,15,15);
+  cube.rotate(AXIS_Z, 90);
+  CHECK(cube.get(0,1,4).red == 15);
+}
+
+TEST_CASE("rotate() with an extreme angle drops out-of-range voxels instead of corrupting state") {
+  CubeBuffer cube;
+  cube.all(1,1,1);
+  // Before the bounds fix, angles like this wrote far outside the local
+  // 8x8x8 staging array used internally by rotate() -- undefined behaviour.
+  // Every voxel started at (1,1,1); after rotating, each one is either
+  // still (1,1,1) (mapped to a valid position) or was dropped and is back
+  // at the cleared (0,0,0) -- never anything else, and never a crash.
+  cube.rotate(AXIS_X, 999999);
+  for (int x = 0; x < 8; x++) {
+    for (int y = 0; y < 8; y++) {
+      for (int z = 0; z < 8; z++) {
+        CubeBuffer::Color c = cube.get(x,y,z);
+        CHECK((c.red == 0 || c.red == 1));
+        CHECK(c.red == c.green);
+        CHECK(c.red == c.blue);
+      }
+    }
+  }
+}
