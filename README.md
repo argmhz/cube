@@ -52,6 +52,7 @@ Fysisk LED-kube
 | `resources/` | Font-bitmap-data |
 | `tests/` | Hardware-fri testsuite (`make check`) |
 | `deploy/` | `systemd`-service til drift på Pi'en |
+| `sim/` | Simulator — kør rigtige animationer og se dem i 3D uden fysisk kube (`make sim`) |
 | `bin/` | Byggeoutput (`.gitignore`'et — oprettes lokalt, se Opsætning) |
 | `Makefile` | Bygger alle animationer til `.so` og alle apps til eksekverbare filer, samt testsuiten (`make check`) |
 | `generate.sh` | Scaffolder en ny animationsfil ud fra en skabelon |
@@ -99,6 +100,17 @@ sudo bin/socket --host 0.0.0.0 --port 1234 --animations-dir ./bin/animations
 ```
 
 Se [deploy/README.md](deploy/README.md) for at køre serveren som en `systemd`-service.
+
+## Simulator
+
+Se hvordan en animation ser ud i 3D uden den fysiske kube — nyttigt når man udvikler eller fejlsøger uden at stå ved Pi'en:
+
+```bash
+make sim
+./bin/simulator --animation Prism --seconds 10 --out /tmp/prism.jsonl
+```
+
+Åbn derefter [Cube Playback](https://claude.ai/artifact/BiwxqNsU6iw7SapEsNCqnR) og indlæs `.jsonl`-filen. Se [sim/README.md](sim/README.md) for detaljer.
 
 ## Netværksprotokol
 
