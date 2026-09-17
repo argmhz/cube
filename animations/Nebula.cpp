@@ -8,10 +8,19 @@
 // A soft, glowing orb of light drifting through the cube on a lazy
 // Lissajous path, its hue cycling slowly -- brightness falls off gently
 // with distance from the orb's center (real 4-bit BAM fades, not a hard
-// on/off sphere), with a faint ambient tint so the cube never goes fully
-// black. Inspired by soft plasma-glow LED cube builds.
+// on/off sphere). Inspired by soft plasma-glow LED cube builds.
 class Nebula : public Animation {
   int speed = 35000;
+  // Gaussian falloff width. On an 8-wide cube even the un-widened glow
+  // already reaches most voxels, so this is deliberately tight -- kept
+  // tunable live (see onDataUpdate) since exactly how a given glow radius
+  // reads depends on the physical LEDs/diffuser, not just the numbers.
+  float spread = 1.6f;
+  // Base glow added everywhere, 0..1 of full brightness. Defaults to 0 --
+  // a real cube's LEDs make even a small ambient floor on all 512 voxels
+  // read as a much stronger background wash than the same numbers look
+  // like on a screen.
+  float ambient = 0.0f;
 
   static float wrap(float value) {
     value -= std::floor(value);
@@ -42,12 +51,17 @@ public:
     if (data["speed"].is_number_integer()) {
       speed = std::clamp(data["speed"].get<int>(), 15000, 200000);
     }
+    if (data["spread"].is_number()) {
+      spread = std::clamp(data["spread"].get<float>(), 0.4f, 6.0f);
+    }
+    if (data["ambient"].is_number()) {
+      ambient = std::clamp(data["ambient"].get<float>(), 0.0f, 0.3f);
+    }
   }
 
   void draw(Cube *cube) override {
     const float CENTER = 3.5f;
-    const float RADIUS = 2.4f;   // how far the orb drifts from the center
-    const float SOFTNESS = 3.2f; // higher = wider, softer glow
+    const float RADIUS = 2.4f; // how far the orb drifts from the center
 
     float t = 0.0f;
 
@@ -63,8 +77,8 @@ public:
           for (int x = 0; x < 8; ++x) {
             float dx = x - ox, dy = y - oy, dz = z - oz;
             float dist2 = dx * dx + dy * dy + dz * dz;
-            float glow = std::exp(-dist2 / SOFTNESS);
-            float level = glow + 0.05f * (1.0f - glow); // faint ambient floor
+            float glow = std::exp(-dist2 / spread);
+            float level = glow + ambient * (1.0f - glow);
 
             int r = (int)std::round(hue.red   * level);
             int g = (int)std::round(hue.green * level);
