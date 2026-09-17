@@ -84,6 +84,12 @@ public:
 
     std::vector<std::string> files;
 
+    // directory_iterator throws if `path` doesn't exist -- a misconfigured
+    // --animations-dir shouldn't be able to take the whole process down.
+    if (!std::filesystem::exists(path)) {
+      return files;
+    }
+
     for (const auto & entry : std::filesystem::directory_iterator(path)){
       files.push_back(entry.path());
     }

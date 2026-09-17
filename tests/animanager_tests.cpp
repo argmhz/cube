@@ -25,3 +25,9 @@ TEST_CASE("loadAnimation() with a bogus path leaves the manager not ready, not c
   CHECK_FALSE(manager.isReady());
   manager.stopAnimation(); // must still be safe after a failed load
 }
+
+TEST_CASE("getAnimationsFiles() on a non-existent directory returns empty instead of throwing") {
+  AniManager manager(nullptr);
+  std::vector<std::string> files = manager.getAnimationsFiles("./this-directory-does-not-exist");
+  CHECK(files.empty());
+}

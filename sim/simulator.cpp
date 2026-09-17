@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <cstdlib>
+#include <filesystem>
 #include "../lib/core/Cube.h"
 #include "../lib/animation/AniManager.h"
 
@@ -15,9 +16,28 @@
 Cube * cube = new Cube;
 AniManager * manager;
 
+const std::string SIM_ANIMATIONS_DIR = "./bin/sim-animations";
+
 void runAnimation(std::string soPath) {
   manager = new AniManager(cube);
   manager->loadAnimation(soPath.c_str());
+
+  if (!manager->isReady()) {
+    // loadAnimation() already printed *why* dlopen failed (bad path, wrong
+    // arch, ...); calling getAnimation() here would dereference a null
+    // Animation* and segfault instead of exiting cleanly.
+    std::cerr << "Could not load animation from " << soPath << "\n";
+    if (std::filesystem::exists(SIM_ANIMATIONS_DIR)) {
+      std::cerr << "Available animations in " << SIM_ANIMATIONS_DIR << ":\n";
+      for (const std::string &file : manager->getAnimationsFiles(SIM_ANIMATIONS_DIR)) {
+        std::cerr << "  " << std::filesystem::path(file).stem().string() << "\n";
+      }
+    } else {
+      std::cerr << SIM_ANIMATIONS_DIR << " does not exist -- did you run `make sim`?\n";
+    }
+    std::exit(1);
+  }
+
   manager->getAnimation().draw(cube);
 }
 
@@ -43,7 +63,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::string soPath = "./bin/sim-animations/" + animationName + ".so";
+  std::string soPath = SIM_ANIMATIONS_DIR + "/" + animationName + ".so";
 
   std::ofstream outFile;
   std::ostream *out = &std::cout;
