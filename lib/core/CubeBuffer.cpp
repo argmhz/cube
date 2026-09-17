@@ -1,9 +1,11 @@
 #pragma once
-#include "Cube.h"
-#include "helpers.h"
+#include "CubeBuffer.h"
+#include "../helpers.h"
+#include "Vec3.h"
 #include <math.h>
+#include <iostream>
 
-void Cube::plane(int axis,int index,int r,int g,int b){
+void CubeBuffer::plane(int axis,int index,int r,int g,int b){
   switch(axis){
     case AXIS_X:
     for(int z=0;z<8;z++){
@@ -28,11 +30,11 @@ void Cube::plane(int axis,int index,int r,int g,int b){
     break;
    }
 }
-void Cube::plane(int axis,int index,Color color) {
+void CubeBuffer::plane(int axis,int index,Color color) {
   plane(axis, index, color.red, color.green, color.blue);
 }
 
-void Cube::clearPlane(int axis,int index){
+void CubeBuffer::clearPlane(int axis,int index){
   switch (axis) {
     case AXIS_X:
       for (size_t z = 0; z < 8; z++) {
@@ -58,7 +60,7 @@ void Cube::clearPlane(int axis,int index){
   }
 }
 
-void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
+void CubeBuffer::sphere(int x,int y,int z,int radius,int r, int g,int b) {
 
 	    // Iterate through phi, theta then convert r,theta,phi to  XYZ
     for (double phi = 0.; phi < 2*M_PI; phi += M_PI/10.) // Azimuth [0, M_2PI]
@@ -70,11 +72,11 @@ void Cube::sphere(int x,int y,int z,int radius,int r, int g,int b) {
     }
 }
 
-void Cube::sphere(int x,int y,int z,int radius, Color color) {
+void CubeBuffer::sphere(int x,int y,int z,int radius, Color color) {
   sphere(x,y,z,radius, color.red, color.green, color.blue);
 }
 
-void Cube::shiftPlane(int axis,int index,int direction){
+void CubeBuffer::shiftPlane(int axis,int index,int direction){
 
 	int _z,_y,__z,__y;
 
@@ -126,7 +128,7 @@ void Cube::shiftPlane(int axis,int index,int direction){
 }
 
 
-void Cube::line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b){
+void CubeBuffer::line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b){
   bool reverseX = false;
   bool reverseY = false;
   bool reverseZ = false;
@@ -162,7 +164,7 @@ void Cube::line(int x1,int y1,int z1,int x2,int y2,int z2,int r,int g,int b){
   set(x2,y2,z2,r,g,b);
 }
 
-void Cube::all(int r, int g,int b){
+void CubeBuffer::all(int r, int g,int b){
   for (size_t z = 0; z < 8; z++) {
     for (size_t y = 0; y < 8; y++) {
       for (size_t x = 0; x < 8; x++) {
@@ -172,11 +174,11 @@ void Cube::all(int r, int g,int b){
   }
 }
 
-void Cube::all(Color color) {
+void CubeBuffer::all(Color color) {
   all(color.red,color.green,color.blue);
 }
 
-void Cube::shift(int axis,int direction){
+void CubeBuffer::shift(int axis,int direction){
 
   int i, x ,y;
   int ii, iii;
@@ -240,7 +242,7 @@ void Cube::shift(int axis,int direction){
 
 }
 
-void Cube::box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b) {
+void CubeBuffer::box(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g, int b) {
   if (startx > endx) swapint(startx,endx);
   if (starty > endy) swapint(starty,endy);
   if (startz > endz) swapint(startz,endz);
@@ -254,7 +256,7 @@ void Cube::box(int startx, int starty, int startz, int endx, int endy, int endz,
   }
 }
 
-void Cube::hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
+void CubeBuffer::hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
   if (startx > endx) swapint(startx,endx);
   if (starty > endy) swapint(starty,endy);
   if (startz > endz) swapint(startz,endz);
@@ -270,7 +272,7 @@ void Cube::hollowBox(int startx, int starty, int startz, int endx, int endy, int
   }
 }
 
-void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
+void CubeBuffer::boxOutline(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b) {
   if (startx > endx) swapint(startx,endx);
   if (starty > endy) swapint(starty,endy);
   if (startz > endz) swapint(startz,endz);
@@ -279,7 +281,7 @@ void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, in
   for (int i = startx; i <= endx; i++) {
     for (int j = starty; j <= endy; j++) {
       for (int k = startz; k <= endz; k++) {
-        int sum =  (i == startx) + (i == endy) + (j == starty) + (j == endy) + (k == startz) + (k == endz);
+        int sum =  (i == startx) + (i == endx) + (j == starty) + (j == endy) + (k == startz) + (k == endz);
         if (sum >= 2){
           set(i,j,k,r,g,b);
         }
@@ -288,35 +290,29 @@ void Cube::boxOutline(int startx, int starty, int startz, int endx, int endy, in
   }
 }
 
-void Cube::rotate(int axis, int degree) {
+void CubeBuffer::rotate(int axis, int degree) {
 
-  // x = cos(degree) * x - sin(degree) * y
-  // y = sin(degree) * x + cos(degree) * y
-  int _x, _y,_z;
+  // Rotates around the cube's own center (3.5,3.5,3.5 -- the middle of the
+  // 0..7 lattice), not the corner (0,0,0), using the standard rotation
+  // matrices in Vec3.h instead of a hand-derived formula per axis.
+  const double CENTER = 3.5;
+  double radians = degree * PI / 180.0;
+
   Color n[8][8][8];
   for (size_t z = 0; z < 8; z++) {
     for (size_t x = 0; x < 8; x++) {
       for (size_t y = 0; y < 8; y++) {
-        switch (axis) {
-          case AXIS_X:
-            _x = x;
-            _y = y * cos(degree) - z * sin(degree);
-            _z = y * sin(degree) + z * cos(degree);
-          break;
-          case AXIS_Y:
-            _x = z * sin(degree) + x * cos(degree);
-            _y = y;
-            _z = y * cos(degree) - x * sin(degree);
-          break;
-          case AXIS_Z:
-            _x = x * cos(degree) - y * sin(degree);
-            _y = x * sin(degree) + y * cos(degree);
-            _z = z;
-          break;
-        }
+        Vec3 centered{ x - CENTER, y - CENTER, z - CENTER };
+        Vec3 rotated = rotateAroundAxis(centered, axis, radians);
+
+        int _x = (int)round(rotated.x + CENTER);
+        int _y = (int)round(rotated.y + CENTER);
+        int _z = (int)round(rotated.z + CENTER);
+
         Color c = get(x,y,z);
-        // std::cout << _x << " " << _y << " " << _z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
-        n[_x][_y][_z] = c;
+        if (_x >= 0 && _x < 8 && _y >= 0 && _y < 8 && _z >= 0 && _z < 8) {
+          n[_x][_y][_z] = c;
+        }
       }
     }
   }
@@ -325,43 +321,16 @@ void Cube::rotate(int axis, int degree) {
     for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
         Color c = n[x][y][z];
-        std::cout << x << " " << y << " " << z << " c: " << c.red << " " << c.blue << " " << c.green <<  '\n';
         set(x,y,z,c);
       }
     }
   }
 }
 
-
-// var rotateZ3D = function(theta) {
-//    var sinTheta = sin(theta);
-//    var cosTheta = cos(theta);
-//    for (var n = 0; n < nodes.length; n++) {
-//       var node = nodes[n];
-//       var x = node[0];
-//       var y = node[1];
-//       node[0] = x * cosTheta - y * sinTheta;
-//       node[1] = y * cosTheta + x * sinTheta;
-//    }
-// };
-//
-void Cube::rotateZ(int degree){
-  float sinT = sin(degree);
-  float cosT = cos(degree);
-
-  for (size_t x = 0; x < 8; x++) {
-    for (size_t y = 0; y < 8; y++) {
-      for (size_t z = 0; z < 8; z++) {
-
-        set(x * cosT - y * sinT,y * cosT + x * sinT, z, get(x,y,z));
-        // set(4*sin(j)*cos(i),4*sin(j)*sin(i),4*cos(j),get(x,y,z));
-         std::cout << x + floor(x * cosT - y * sinT) << " " << y * cosT + x * sinT << " "  << std::endl;
-        // x=4*sin(j)*cos(i);
-        // y=4*sin(j)*sin(i);
-        // z=4*cos(j);
-      }
-    }
-  }
+void CubeBuffer::rotateZ(int degree){
+  // Kept only so any existing caller of rotateZ keeps working; the actual
+  // rotation logic lives in rotate() now, so there is only one to maintain.
+  rotate(AXIS_Z, degree);
 }
 // i and j are angles like latitude and longitude
 // x=radius*sin(j)*cos(i); y=radius*sin(j)*sin(i); z=radius*cos(j);

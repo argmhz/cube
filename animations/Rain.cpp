@@ -1,7 +1,7 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
-#include "../lib/json.hpp"
+#include "../lib/vendor/json.hpp"
 
 class Rain : public Animation {
 
@@ -16,11 +16,21 @@ class Rain : public Animation {
     }
 
     if(data["max_drops"].is_number()){
-      max_drops = data["max_drops"].get<int>();
+      int value = data["max_drops"].get<int>();
+      // max_drops sizes a stack array each frame -- keep it within sane
+      // bounds instead of trusting a network client not to send 0/negative
+      // (undefined behaviour) or something huge (stack overflow).
+      if(value > 0 && value <= 512){
+        max_drops = value;
+      }
     }
 
     if(data["tens"].is_number()){
-      tens = data["tens"].get<int>();
+      int value = data["tens"].get<int>();
+      // tens is a modulo divisor below -- 0 would be a division by zero.
+      if(value > 0){
+        tens = value;
+      }
     }
   }
 

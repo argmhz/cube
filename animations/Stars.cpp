@@ -1,11 +1,13 @@
 
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
+#include <mutex>
 
 class Stars : public Animation {
 
   Cube *cube;
+  std::mutex cubeMutex;
 
   void blink() {
 
@@ -16,13 +18,19 @@ class Stars : public Animation {
   		int y = rand()%8;
   		int z = rand()%8;
   			for (i = 0; i < 16; i++) {
-  				cube->set(x,y,z,i,i,i);
-  				cube->update();
+  				{
+  					std::lock_guard<std::mutex> lock(cubeMutex);
+  					cube->set(x,y,z,i,i,i);
+  					cube->update();
+  				}
   				usleep(speed);
   			}
   			for (i = 15; i >= 0; i--) {
-  				cube->set(x,y,z,i,i,i);
-  				cube->update();
+  				{
+  					std::lock_guard<std::mutex> lock(cubeMutex);
+  					cube->set(x,y,z,i,i,i);
+  					cube->update();
+  				}
   				usleep(speed);
   			}
   	}

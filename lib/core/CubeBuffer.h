@@ -1,10 +1,9 @@
 #pragma once
 
-#include <bcm2835.h>
-#include <iostream>
 #include <bitset>
-#include <unistd.h>
-#include <thread>
+#include <cstdint>
+#include <cstdlib>
+#include <cstddef>
 
 #define AXIS_X 1
 #define AXIS_Y 2
@@ -13,21 +12,11 @@
 #define MAX_COLOR 15
 #define MIN_COLOR 0
 
-class Cube {
-  private:
-
-
-   bool running = true;
-
-   int bam_counter = 0;
-   int bam_bit = 0;
-
-   char layers[8] = {128,64,32,16,8,4,2,1};
-
-   char engine[8][4][24] = {};
-   char r_engine[24] = {};
-
-   std::bitset<4> frontBuffer[8][192] = {};
+// Pure 8x8x8 voxel buffer + geometry helpers.
+// No hardware I/O of any kind (no bcm2835, no threads) so it can be built
+// and unit tested on any machine, not just on the Raspberry Pi.
+class CubeBuffer {
+  protected:
 
    int tr[192] = {
      189,190,191,186,187,188,175,184,
@@ -55,6 +44,7 @@ class Cube {
       18, 17, 22, 21, 20, 33, 32, 23,
       36, 35, 34, 39, 38, 37};
 
+   std::bitset<4> frontBuffer[8][192] = {};
 
   public:
     struct Color{
@@ -79,21 +69,8 @@ class Cube {
       int x,y,z;
     };
 
-  	Cube(){
-      initBcm2835();
+    CubeBuffer(){
       clear();
-    }
-    ~Cube(){
-      clear();
-
-      bcm2835_spi_end();
-      bcm2835_close();
-
-
-    }
-
-    bool isRunning(){
-      return running;
     }
 
     void clear() {
@@ -131,10 +108,9 @@ class Cube {
       }
     }
 
-    void set(int x, int y, int z, Cube::Color color){
-      set(x,y,x, color.red, color.green, color.blue);
+    void set(int x, int y, int z, Color color){
+      set(x,y,z, color.red, color.green, color.blue);
     }
-
 
     Color get(uint8_t x, uint8_t y, uint8_t z){
       Color c;
@@ -149,46 +125,6 @@ class Cube {
       return c;
     }
 
-    void update() {
-      createFrame();
-    }
-
-    void run(){
-
-      while (running) {
-
-        if(bam_counter == 1 || bam_counter == 3 || bam_counter == 7){
-          bam_bit++;
-        }
-
-        bam_counter++;
-        for (size_t layer = 0; layer < 8; layer++) {
-          // disable shift registers output
-          bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
-          // transfer layer select byte
-          bcm2835_spi_transfer(layers[layer]);
-          // transfer layer data
-          bcm2835_spi_transfernb(engine[layer][bam_bit],r_engine,24);
-          // enable shift registers output
-          bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
-
-          // latch pin
-          bcm2835_gpio_write(RPI_GPIO_P1_11, LOW);
-          usleep(1);
-          bcm2835_gpio_write(RPI_GPIO_P1_11, HIGH);
-
-        }
-
-        if(bam_counter == 15){
-          bam_bit = 0;
-          bam_counter = 0;
-        }
-
-      }
-      clear();
-      update();
-    }
-
     void setDirect(int layer, int pos){
       frontBuffer[layer][pos] = 15;
     }
@@ -196,20 +132,6 @@ class Cube {
     void setIndex(int layer, int pos, int value){
       frontBuffer[layer][tr[pos]] = value;
     }
-
-    void stop(){
-      running = false;
-    }
-
-    std::thread start(){
-      running = true;
-      std::thread cubeThread([this] {
-        this->run();
-      });
-      return cubeThread;
-    }
-
-
 
     void swapint(int & one, int & two) {
 	  	one = one^two;
@@ -242,41 +164,4 @@ class Cube {
     void hollowBox(int startx, int starty, int startz, int endx, int endy, int endz, int r, int g,int b);
     void rotateZ(int degrees);
     void rotate(int axis, int degree);
-
-  private:
-    void createFrame(){
-      for (int s = 0; s < 8; ++s){
-        for (int i = 0; i < 4; ++i){
-          for (int j = 0; j < 24; ++j){
-            char &c = engine[s][i][j];
-            c = 0;
-            for (int bit = 0; bit < 8; ++bit) {
-              c |= frontBuffer[s][j * 8 + bit][i] << bit;
-            }
-          }
-        }
-      }
-    }
-
-
-
-    bool initBcm2835(){
-
-      if (!bcm2835_init()) {
-        printf("init failed\n");
-        return false;
-      }
-
-      if(!bcm2835_spi_begin()){
-        printf("bcm2835_spi_begin failed. Are you running as root??\n");
-        return false;
-      }
-
-      bcm2835_gpio_fsel(RPI_GPIO_P1_11, BCM2835_GPIO_FSEL_OUTP);
-      bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
-      bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_16);
-
-      return true;
-    }
-
 };

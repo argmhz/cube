@@ -2,13 +2,18 @@
 #include <thread>
 #include <mutex>
 #include <string>
-#include "../lib/Cube.cpp"
+#include "../lib/core/Cube.h"
 #include "../lib/helpers.h"
-#include "../lib/json.hpp"
-#include "../lib/AniManager.cpp"
+#include "../lib/vendor/json.hpp"
+#include "../lib/animation/AniManager.h"
+#include "../lib/net/CommandHandler.h"
+#include "../lib/net/AnimationCommandHandler.h"
+#include "../lib/net/ConnectionLoop.h"
+#include "../lib/Log.h"
+#include "../lib/net/Config.h"
 #include "../animations/Text.cpp"
-#include "../lib/remotehelpers.cpp"
-#include "../lib/Socket.cpp"
+#include "../lib/remotehelpers.h"
+#include "../lib/net/Socket.h"
 
 
 using json = nlohmann::json;
@@ -16,22 +21,13 @@ using json = nlohmann::json;
 Cube * cube = new Cube;
 AniManager *manager;
 
-std::string selectedAnimaiton = "./bin/animations/Text.so";
+std::string selectedAnimaiton;
 
-void response(std::string type, std::string responseMessage){
-  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\n'), responseMessage.end());
-  responseMessage.erase(std::remove(responseMessage.begin(), responseMessage.end(), '\r'), responseMessage.end());
+void incoming(const Config &config){
+  AnimationCommandHandler handler(*manager, selectedAnimaiton, config.animationsDir);
 
-  std::cout << "{\"" << type << "\":" << responseMessage << "}" <<  std::endl;
-}
-
-
-void incoming(){
-  // instantiate Animation manager
-  manager = new AniManager(cube);
-
-  string ip = "localhost";
-  string port = "1234";
+  string ip = config.host;
+  string port = config.port;
 
   Socket *masterSocket = new Socket(AF_INET,SOCK_STREAM,0); //AF_INET (Internet mode) SOCK_STREAM (TCP mode) 0 (Protocol any)
   int optVal = 1;
@@ -39,55 +35,31 @@ void incoming(){
   masterSocket->socket_set_opt(SOL_SOCKET, SO_REUSEADDR, &optVal); //You can reuse the address and the port
   masterSocket->bind(ip, port); //Bind socket on localhost:1234
   masterSocket->listen(10); //Start listening for incoming connections (10 => maximum of 10 Connections in Queue)
+  Log::info("listening on " + ip + ":" + port);
 
   while (true) {
-    vector<Socket> reads(1);
-    reads[0] = *masterSocket;
-    int seconds = 10; //Wait 10 seconds for incoming Connections
-    if(Socket::select(&reads, NULL, NULL, seconds) < 1){ continue; } else { break; }
-  }
+    // Wait for a client to connect.
+    Socket *newSocket = nullptr;
+    while (!newSocket) {
+      vector<Socket> reads(1);
+      reads[0] = *masterSocket;
+      int seconds = 10; //Wait 10 seconds for incoming connections
+      if(Socket::select(&reads, NULL, NULL, seconds) < 1){ continue; }
 
-  Socket *newSocket = masterSocket->accept();
-
-  while (true) {
-    vector<Socket> reads(1);
-    reads[0] = *newSocket;
-    int seconds = 10; //Wait 10 seconds for input
-    if(Socket::select(&reads, NULL, NULL, seconds) < 1){  continue; } else {
-      string buffer;
-      newSocket->socket_read(buffer, 1024); //Read 1024 bytes of the stream
-
-      try {
-        json command = json::parse(buffer);
-
-        if(command["action"] == "select"){
-          selectedAnimaiton = (std::string)command["animation"];
-          manager->getAnimation().stop();
-        }
-
-        if(command["action"] == "set") {
-          manager->getAnimation().onDataUpdate(command);
-        }
-
-        if(command["action"] == "options"){
-          std::vector<string> files = manager->getAnimationsFiles("./bin/animations");
-          json result;
-          result["action"] = "options";
-          result["animations"] = files;
-          newSocket->socket_write((string)result.dump());
-        }
-      } catch(json::exception& e) {}
-
-
+      Socket *candidate = masterSocket->accept();
+      if (candidate->sock >= 0) {
+        newSocket = candidate;
+      }
     }
+
+    Log::info("client connected from " + newSocket->address);
+    serveConnection(*newSocket, handler);
+    Log::info("client disconnected");
+
+    newSocket->socket_shutdown(2);
+    newSocket->close();
+    // Loop back around and wait for the next connection instead of exiting.
   }
-
-  newSocket->socket_shutdown(2);
-  newSocket->close();
-
-  masterSocket->socket_shutdown(2);
-  masterSocket->close();
-
 }
 
 int main(int argc, char *argv[]){
@@ -95,9 +67,15 @@ int main(int argc, char *argv[]){
   setbuf(stdin, NULL);
   srand (time(NULL));
 
+  Config config = parseArgs(std::vector<std::string>(argv + 1, argv + argc));
+  selectedAnimaiton = config.animationsDir + "/Text.so";
+
+  // instantiate Animation manager before any thread can touch it
+  manager = new AniManager(cube);
+
   // Start cube
   std::thread cubeThread = cube->start();
-  std::thread incomingThread(incoming);
+  std::thread incomingThread([&config]{ incoming(config); });
 
 
   Text *t = new Text;

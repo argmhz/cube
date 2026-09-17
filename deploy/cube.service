@@ -1,0 +1,21 @@
+[Unit]
+Description=Cube LED animation server
+# network.target only means networking *services* have started, not that
+# an address has actually been assigned yet (WiFi association + DHCP can
+# take a few seconds after boot) -- network-online.target actually waits.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# CHANGE /home/pi/cube below to wherever this repo actually lives on the Pi.
+WorkingDirectory=/home/pi/cube
+ExecStart=/home/pi/cube/bin/socket
+Restart=on-failure
+RestartSec=2
+# bcm2835 needs root (or /dev/gpiomem group access, which this project does
+# not currently set up) -- matches the existing `sudo bin/socket` usage.
+User=root
+
+[Install]
+WantedBy=multi-user.target

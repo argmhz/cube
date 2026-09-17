@@ -343,7 +343,7 @@ int Socket::select(vector<Socket> *reads, vector<Socket> *writes, vector<Socket>
     if (writes != NULL) {
         for (int i = (int)writes->size()-1; i >= 0; i--) {
             if (!FD_ISSET(writes->at(i).sock, &writefds)) {
-                writes->erase(reads->begin()+i);
+                writes->erase(writes->begin()+i);
             }
         }
     }

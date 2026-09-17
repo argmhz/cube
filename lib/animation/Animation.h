@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include "../lib/json.hpp"
+#include "../vendor/json.hpp"
 
 using json = nlohmann::json;
 

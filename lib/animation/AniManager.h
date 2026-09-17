@@ -4,12 +4,12 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
-#include "Animation.hpp"
+#include "Animation.h"
 
 
 class AniManager {
 private:
-  class Animation *animation;
+  class Animation *animation = nullptr;
   class Cube *cube;
 public:
 
@@ -71,7 +71,9 @@ public:
   }
 
   void stopAnimation(){
-    animation->stop();
+    if(animation){
+      animation->stop();
+    }
   }
 
   Animation &getAnimation(){
@@ -81,6 +83,12 @@ public:
   std::vector<std::string> getAnimationsFiles(std::string path){
 
     std::vector<std::string> files;
+
+    // directory_iterator throws if `path` doesn't exist -- a misconfigured
+    // --animations-dir shouldn't be able to take the whole process down.
+    if (!std::filesystem::exists(path)) {
+      return files;
+    }
 
     for (const auto & entry : std::filesystem::directory_iterator(path)){
       files.push_back(entry.path());
