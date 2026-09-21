@@ -1,9 +1,12 @@
 #include "../lib/core/Cube.h"
 #include "../lib/animation/Animation.h"
+#include "../lib/vendor/json.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <unistd.h>
+
+using json = nlohmann::json;
 
 class Aurora : public Animation {
   struct Star {
@@ -12,6 +15,12 @@ class Aurora : public Animation {
     int z;
     float phase;
   };
+
+  int speed = 40000;
+  // Overall glow multiplier applied to every curtain voxel -- lets the
+  // aurora be dialed from a faint shimmer up to a vivid wash without
+  // touching the colour weights below.
+  float intensity = 1.0f;
 
   static int brightness(float value) {
     return std::clamp(static_cast<int>(std::round(value)), 0, MAX_COLOR);
@@ -36,7 +45,7 @@ class Aurora : public Animation {
           const float edgeFade = 0.38f + 0.62f * std::sin((z + 1) * M_PI / 9.0f);
           const float shimmer = 0.78f + 0.22f * std::sin(time * 1.8f + y + z * 0.6f);
           const float glowFade = glow == 0 ? 1.0f : 0.22f;
-          const float light = edgeFade * shimmer * glowFade;
+          const float light = edgeFade * shimmer * glowFade * intensity;
 
           int red = violet ? brightness(9.0f * light) : brightness(1.5f * light);
           int green = violet ? brightness(3.0f * light) : brightness(15.0f * light);
@@ -53,6 +62,18 @@ class Aurora : public Animation {
   }
 
 public:
+  void onDataUpdate(json data) override {
+    if (data["speed"].is_number()) {
+      int value = data["speed"].get<int>();
+      if (value > 0) {
+        speed = value;
+      }
+    }
+    if (data["intensity"].is_number()) {
+      intensity = std::clamp(data["intensity"].get<float>(), 0.2f, 2.5f);
+    }
+  }
+
   void draw(Cube *cube) override {
     const Star stars[] = {
         {0, 0, 7, 0.2f}, {7, 1, 6, 1.7f}, {1, 6, 5, 3.1f},
@@ -72,7 +93,7 @@ public:
       }
 
       cube->update();
-      usleep(40000);
+      usleep(speed);
       time += 0.075f;
 
       if (time > 2.0f * M_PI) {
