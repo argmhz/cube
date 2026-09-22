@@ -518,10 +518,6 @@ class Folder: public Animation {
 
     c -> clear();
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 
 extern "C"

@@ -41,10 +41,6 @@ class Sine : public Animation {
       }
     }
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 extern "C" Animation * create() {
     return new Sine;

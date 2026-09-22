@@ -26,10 +26,6 @@ class Party : public Animation {
       usleep(100000);
     }
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 extern "C" Animation * create() {
     return new Party;
