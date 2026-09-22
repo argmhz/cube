@@ -54,18 +54,21 @@ class Fireworks : public Animation {
 
   void draw(Cube *c) override {
     while (isRunning()) {
+      // Y is the cube's vertical axis (same as Rain's drops and
+      // UpdownColor's columns), so that is the one the rocket climbs and
+      // the one gravity pulls the sparks back down.
       float originX = 2 + rand() % 4;
-      float originY = 2 + rand() % 4;
-      float originZ = 5 + rand() % 2;
+      float originY = 5 + rand() % 2;
+      float originZ = 2 + rand() % 4;
 
       Cube::Color color = rainbow(static_cast<float>(rand() % 360) / 360.0f, MAX_COLOR);
 
       // Ascend: a single spark climbs from the floor to the burst height.
-      for (int z = 0; z < originZ; z++) {
+      for (int y = 0; y < originY; y++) {
         c->clear();
-        c->set(originX, originY, z, color);
+        c->set(originX, y, originZ, color);
         c->update();
-        usleep(600 + 500 * z);
+        usleep(600 + 500 * y);
       }
 
       // Burst: numParticles sparks fly outward from the origin and fall
@@ -90,7 +93,7 @@ class Fireworks : public Animation {
           particles[i][0] += particles[i][3] / slowrate;
           particles[i][1] += particles[i][4] / slowrate;
           particles[i][2] += particles[i][5] / slowrate;
-          particles[i][2] -= gravity;
+          particles[i][1] -= gravity;
 
           c->set(particles[i][0], particles[i][1], particles[i][2], color);
         }
