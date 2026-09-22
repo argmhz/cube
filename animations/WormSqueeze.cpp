@@ -52,9 +52,12 @@ class WormSqueeze : public Animation {
 
       cube->shift(axis, direction);
 
+      // The head lives in the floor plane (y = 0) and shift() pushes what
+      // is already drawn upwards, so x and y here wander across the floor
+      // and map to the cube's X and Z.
       for (int j = 0; j < size; j++) {
         for (int k = 0; k < size; k++) {
-          cube->set(x + j, y + k, 0, color);
+          cube->set(x + j, 0, y + k, color);
           cube->update();
         }
       }
