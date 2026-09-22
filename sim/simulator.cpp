@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "../lib/core/Cube.h"
 #include "../lib/animation/AniManager.h"
+#include "../lib/vendor/json.hpp"
 
 // Runs one real, unmodified animation .so (built for this machine against
 // the fake bcm2835 -- see Makefile's `sim` target) and records what it
@@ -18,7 +19,7 @@ AniManager * manager;
 
 const std::string SIM_ANIMATIONS_DIR = "./bin/sim-animations";
 
-void runAnimation(std::string soPath) {
+void runAnimation(std::string soPath, std::string params) {
   manager = new AniManager(cube);
   manager->loadAnimation(soPath.c_str());
 
@@ -38,6 +39,17 @@ void runAnimation(std::string soPath) {
     std::exit(1);
   }
 
+  // Same path the socket server takes when a client moves a slider, so the
+  // animation's control surface can be exercised without a Pi or a socket.
+  if (!params.empty()) {
+    try {
+      manager->getAnimation().onDataUpdate(nlohmann::json::parse(params));
+    } catch (const nlohmann::json::exception &e) {
+      std::cerr << "Could not parse --params as JSON: " << e.what() << "\n";
+      std::exit(1);
+    }
+  }
+
   manager->getAnimation().draw(cube);
 }
 
@@ -45,6 +57,7 @@ int main(int argc, char *argv[]) {
   std::string animationName;
   int seconds = 10;
   std::string outPath;
+  std::string params;
 
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
@@ -54,11 +67,13 @@ int main(int argc, char *argv[]) {
       seconds = std::atoi(argv[++i]);
     } else if (arg == "--out" && i + 1 < argc) {
       outPath = argv[++i];
+    } else if (arg == "--params" && i + 1 < argc) {
+      params = argv[++i];
     }
   }
 
   if (animationName.empty()) {
-    std::cerr << "Usage: simulator --animation <Name> [--seconds N] [--out path.jsonl]\n";
+    std::cerr << "Usage: simulator --animation <Name> [--seconds N] [--out path.jsonl] [--params '{\"speed\":20000}']\n";
     std::cerr << "<Name> must exist as bin/sim-animations/<Name>.so (built via `make sim`).\n";
     return 1;
   }
@@ -73,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::thread cubeThread = cube->start();
-  std::thread animationThread(runAnimation, soPath);
+  std::thread animationThread(runAnimation, soPath, params);
 
   auto start = std::chrono::steady_clock::now();
   auto frameInterval = std::chrono::milliseconds(33); // ~30fps

@@ -25,6 +25,12 @@ Bygger hver animation som en almindelig x86-`.so` i `bin/sim-animations/`, samt 
 - `--animation <navn>` — skal matche en fil i `animations/` (uden `.cpp`), fx `Prism`, `ColorWheel`, `FadeColor`.
 - `--seconds <N>` — hvor længe der optages (standard 10).
 - `--out <sti>` — hvor `.jsonl`-optagelsen gemmes. Udelades den, skrives til terminalen i stedet.
+- `--params '<json>'` — sendes til animationens `onDataUpdate()` inden den starter, altså præcis samme vej som når en slider flyttes i cube-client. Gør det muligt at prøve indstillinger af uden hverken Pi eller socket:
+
+  ```bash
+  ./bin/simulator --animation Halo --seconds 10 \
+    --params '{"rings":3,"thickness":0.4,"spread":1.2}' --out /tmp/halo.jsonl
+  ```
 
 **3. Se optagelsen i 3D:**
 
