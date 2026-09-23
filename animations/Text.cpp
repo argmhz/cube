@@ -30,11 +30,17 @@ public:
     }
 
     if(data["color_speed"].is_number()){
-      color_speed = data["color_speed"].get<int>();
+      int value = data["color_speed"].get<int>();
+      if(value > 0){
+        color_speed = value;
+      }
     }
 
     if(data["speed"].is_number()){
-      speed = data["speed"].get<int>();
+      int value = data["speed"].get<int>();
+      if(value > 0){
+        speed = value;
+      }
     }
   }
 
@@ -60,7 +66,14 @@ public:
 
       while(isRunning()){
 
-        str = tmp;
+        // Exactly one trailing space, whatever the text ends with, so the
+        // last character never runs straight into the first one when the
+        // text comes round again.
+        str = Font::renderable(tmp);
+        while(!str.empty() && str.back() == ' '){
+          str.pop_back();
+        }
+        str += ' ';
 
         for(signed c=0;c<str.length();c++){
 
@@ -78,10 +91,6 @@ public:
           }
 
         }
-
-        cube->clearPlane(AXIS_X,5);
-        cube->update();
-        sleep(1);
       }
 
       ColorChangerThread.join();
