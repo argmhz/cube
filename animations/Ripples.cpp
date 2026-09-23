@@ -10,9 +10,9 @@ using json = nlohmann::json;
 
 // A rippling surface: each point's height follows a sine of its distance
 // from the centre, so waves travel outward the way they do when something
-// drops into water. `mirrors` decides how many copies are drawn -- one
-// surface, a mirrored pair at floor and ceiling, or that pair repeated on
-// a second axis so the ripples run through each other.
+// drops into water. `axis` picks which way the wave rises -- or all three
+// at once, so three sets of ripples run through each other -- and
+// `mirrors` adds a reflection at the opposite face.
 class Ripples : public Animation {
   struct Rgb {
     float r;
@@ -20,7 +20,13 @@ class Ripples : public Animation {
     float b;
   };
 
+  static constexpr int AXIS_ALONG_X = 0;
+  static constexpr int AXIS_ALONG_Y = 1;
+  static constexpr int AXIS_ALONG_Z = 2;
+  static constexpr int ALL_AXES = 3;
+
   int speed = 30000;
+  int axis = AXIS_ALONG_Z;
   int mirrors = 1;
   float spread = 0.35f;
   float flow = 1.0f;
@@ -56,8 +62,11 @@ class Ripples : public Animation {
         speed = value;
       }
     }
+    if (data["axis"].is_number()) {
+      axis = std::clamp(data["axis"].get<int>(), 0, 3);
+    }
     if (data["mirrors"].is_number()) {
-      mirrors = std::clamp(data["mirrors"].get<int>(), 1, 3);
+      mirrors = std::clamp(data["mirrors"].get<int>(), 1, 2);
     }
     if (data["spread"].is_number()) {
       spread = std::clamp(data["spread"].get<float>(), 0.0f, 1.0f);
@@ -94,6 +103,7 @@ class Ripples : public Animation {
 
     while (isRunning()) {
       const int copies = mirrors;
+      const int activeAxis = axis;
       cube->clear();
 
       for (int x = 0; x < 4; x++) {
@@ -109,31 +119,34 @@ class Ripples : public Animation {
           const int green = toLevel(hue.g);
           const int blue = toLevel(hue.b);
 
-          // One surface, mirrored into all four quadrants.
-          cube->set(x, y, height, red, green, blue);
-          cube->set(7 - x, y, height, red, green, blue);
-          cube->set(x, 7 - y, height, red, green, blue);
-          cube->set(7 - x, 7 - y, height, red, green, blue);
+          // `axis` picks which way is "up" for the wave; the other two axes
+          // carry the surface. Drawing every orientation through the same
+          // helper is what makes ALL_AXES simply mean running all three.
+          const auto plot = [&](int heightAxis, int h, int u, int v) {
+            switch (heightAxis) {
+              case AXIS_ALONG_X: cube->set(h, u, v, red, green, blue); break;
+              case AXIS_ALONG_Y: cube->set(u, h, v, red, green, blue); break;
+              default: cube->set(u, v, h, red, green, blue); break;
+            }
+          };
 
-          // ...and its reflection under the ceiling.
-          if (copies >= 2) {
-            cube->set(x, y, 7 - height, red, green, blue);
-            cube->set(7 - x, y, 7 - height, red, green, blue);
-            cube->set(x, 7 - y, 7 - height, red, green, blue);
-            cube->set(7 - x, 7 - y, 7 - height, red, green, blue);
-          }
+          const auto surface = [&](int heightAxis) {
+            const int quadrants[4][2] = {{x, y}, {7 - x, y}, {x, 7 - y}, {7 - x, 7 - y}};
+            for (const auto &q : quadrants) {
+              plot(heightAxis, height, q[0], q[1]);
+              // ...and its reflection at the opposite face.
+              if (copies >= 2) {
+                plot(heightAxis, 7 - height, q[0], q[1]);
+              }
+            }
+          };
 
-          // ...and the same pair again with height running along y, so two
-          // sets of ripples pass through each other at right angles.
-          if (copies >= 3) {
-            cube->set(x, height, y, red, green, blue);
-            cube->set(7 - x, height, y, red, green, blue);
-            cube->set(x, height, 7 - y, red, green, blue);
-            cube->set(7 - x, height, 7 - y, red, green, blue);
-            cube->set(x, 7 - height, y, red, green, blue);
-            cube->set(7 - x, 7 - height, y, red, green, blue);
-            cube->set(x, 7 - height, 7 - y, red, green, blue);
-            cube->set(7 - x, 7 - height, 7 - y, red, green, blue);
+          if (activeAxis == ALL_AXES) {
+            surface(AXIS_ALONG_X);
+            surface(AXIS_ALONG_Y);
+            surface(AXIS_ALONG_Z);
+          } else {
+            surface(activeAxis);
           }
         }
       }
