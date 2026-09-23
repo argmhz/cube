@@ -46,5 +46,5 @@ testPaths = $(wildcard tests/*.cpp)
 # (named "check", not "test", since "test" is already an app built from apps/test.cpp)
 check:
 	mkdir -p bin
-	g++ -std=c++17 -Ilib -o bin/test_runner $(testPaths) lib/core/CubeBuffer.cpp lib/net/Socket.cpp -pthread -ldl -lstdc++fs
+	g++ -std=c++17 -Ilib -Isim/fake_bcm2835 -funsigned-char -o bin/test_runner $(testPaths) lib/core/CubeBuffer.cpp lib/net/Socket.cpp sim/fake_bcm2835/fake_bcm2835.cpp -pthread -ldl -lstdc++fs
 	./bin/test_runner
