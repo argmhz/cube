@@ -32,6 +32,12 @@ class Ticker : public Animation {
   int gap = 8;
   bool layoutChanged = true;
 
+  static constexpr int BILLBOARD = 0;
+  static constexpr int SHELL = 1;
+  static constexpr int VERTICAL = 2;
+  static constexpr int STANDING = 3;
+
+  int mode = BILLBOARD;
   int speed = 60000;
   float spin = 0.35f;
   float thickness = 2.0f;
@@ -110,6 +116,9 @@ class Ticker : public Animation {
       gap = std::clamp(data["gap"].get<int>(), 0, 32);
       layoutChanged = true;
     }
+    if (data["mode"].is_number()) {
+      mode = std::clamp(data["mode"].get<int>(), 0, 3);
+    }
     if (data["speed"].is_number()) {
       speed = std::clamp(data["speed"].get<int>(), 10000, 250000);
     }
@@ -150,6 +159,9 @@ class Ticker : public Animation {
       }
 
       const int width = static_cast<int>(ribbon.size());
+      // Snapshot the mode: it can change from the connection thread, and a
+      // frame drawn half in one mode and half in another is nonsense.
+      const int activeMode = mode;
       const float cosAngle = std::cos(angle);
       const float sinAngle = std::sin(angle);
       const float halfThickness = thickness * 0.5f;
@@ -163,25 +175,69 @@ class Ticker : public Animation {
             const float px = x - 3.5f;
             const float pz = z - 3.5f;
 
-            // Split the voxel's position into a distance along the sign and
-            // a distance out through its face, so turning the sign is just
-            // a change of angle rather than a different drawing routine.
-            const float along = px * cosAngle + pz * sinAngle;
-            const float across = pz * cosAngle - px * sinAngle;
-            if (std::fabs(across) > halfThickness) {
+            // Where this voxel sits along the text, and how far it is from
+            // the surface the text is written on. Every mode boils down to
+            // those two numbers, so the sampling below stays the same.
+            float along = 0.0f;
+            float distance = 0.0f;
+            float upright = static_cast<float>(y);
+
+            if (activeMode == SHELL) {
+              // Walk the voxel outwards to the cube's outer wall, then
+              // measure how far round the wall that lands. Projecting from
+              // the centre rather than snapping to a face is what lets the
+              // text be pulled inwards into a solid block by `thickness`.
+              const float reach = std::max(std::fabs(px), std::fabs(pz));
+              if (reach < 0.001f) {
+                continue;
+              }
+              distance = 3.5f - reach;
+              const float sx = px * (3.5f / reach);
+              const float sz = pz * (3.5f / reach);
+
+              if (sx >= std::fabs(sz)) {
+                along = 3.5f + sz;
+              } else if (sz >= std::fabs(sx)) {
+                along = 10.5f - sx;
+              } else if (-sx >= std::fabs(sz)) {
+                along = 17.5f - sz;
+              } else {
+                along = 24.5f + sx;
+              }
+            } else {
+              // Split the position into a distance along the sign and one
+              // out through its face, so turning the sign is just a change
+              // of angle rather than a different drawing routine.
+              along = px * cosAngle + pz * sinAngle;
+              distance = std::fabs(pz * cosAngle - px * sinAngle);
+            }
+
+            if (activeMode == SHELL) {
+              if (distance > thickness - 1.0f + 0.001f) {
+                continue;
+              }
+            } else if (distance > halfThickness) {
               continue;
             }
 
-            float vertical = static_cast<float>(y);
-            if (wobble > 0.0f) {
-              vertical -= wobble * std::sin(along * 0.55f + t * 0.9f);
+            if (activeMode == VERTICAL) {
+              // The ribbon runs up the cube instead of across it, so the
+              // text climbs and its letters lie on their side.
+              std::swap(along, upright);
             }
-            const int row = static_cast<int>(std::lround(vertical));
+
+            if (wobble > 0.0f) {
+              upright -= wobble * std::sin(along * 0.55f + t * 0.9f);
+            }
+
+            const int row = static_cast<int>(std::lround(
+                activeMode == VERTICAL ? upright + 3.5f : upright));
             if (row < 0 || row > 7) {
               continue;
             }
 
-            int column = static_cast<int>(std::floor(along + 3.5f + scroll)) % width;
+            const float offset = (activeMode == SHELL || activeMode == VERTICAL) ? along : along + 3.5f;
+            int column = static_cast<int>(std::floor(offset + scroll)) % width;
             if (column < 0) {
               column += width;
             }
@@ -204,7 +260,9 @@ class Ticker : public Animation {
 
       cube->update();
 
-      scroll = std::fmod(scroll + 1.0f, static_cast<float>(width));
+      if (activeMode != STANDING) {
+        scroll = std::fmod(scroll + 1.0f, static_cast<float>(width));
+      }
       angle = std::fmod(angle + spin * 0.05f, 2.0f * static_cast<float>(M_PI));
       t += 1.0f;
       usleep(speed);
