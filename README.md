@@ -33,7 +33,7 @@ Fysisk LED-kube
 - **`lib/animation/Animation.h`** — basisklasse for animationer. En animation implementerer `draw(Cube*)` og valgfrit `onDataUpdate(json)` til at modtage live parameterændringer (farve, hastighed, tekst osv.).
 - **`lib/animation/AniManager.h`** — indlæser animationer som delte biblioteker (`dlopen`/`dlsym` på `create()`/`destroy()`) og kan hot-swappe den kørende animation uden at genstarte processen.
 - **`lib/animation/Font.h`** — bitmap-font-rendering, bruges af `Text`/`ColorText`-animationerne.
-- **`animations/*.cpp`** — ca. 30 animationer (FadeColor, ColorWheel, BouncyvTwo, Sparkles, Fireworks, DoubleHelix, Text m.fl.). Hver fil kompileres til sit eget `.so`-plugin.
+- **`animations/*.cpp`** — ca. 30 animationer (FadeColor, ColorWheel, BouncyvTwo, Sparkles, Fireworks, DoubleHelix, Text m.fl.). Hver fil kompileres til sit eget `.so`-plugin. `Spectrum` er en mikrofon-analysator: browseren laver FFT'en og streamer fire frekvensbånd, som tegnes som ringe ud fra kubens midte -- bas i midten, diskant ved ydervæggen.
 - **`apps/*.cpp`** — de eksekverbare programmer (se "Kørsel" nedenfor).
 - **`resources/`** — bitmap-font-data brugt af `lib/animation/Font.h`.
 - **`lib/net/`** — `Socket.h`/`.cpp` (BSD-socket-wrapper), `CommandHandler.h`/`AnimationCommandHandler.h` (JSON-protokol-dispatch), `ConnectionLoop.h` (server-en-klient-løkken), `Config.h` (kommandolinje-flag). Se [ARCHITECTURE.md](ARCHITECTURE.md) for detaljer.
@@ -92,6 +92,7 @@ Byg skal køres direkte på (eller krydskompileret til) en Raspberry Pi, da kode
 | `sudo bin/all` | Cykler igennem alle byggede animationer i `bin/animations/`. |
 | `sudo bin/ColorText "tekst"` | Viser en rullende tekststreng i farveskiftende gradient. |
 | `sudo bin/test` | Demoprogram, roterer en linje om X-aksen. |
+| `./bin/sim-socket --animations-dir ./bin/sim-animations --stream-port 8421` | Samme server, bygget til din egen maskine uden Pi. Se [`sim/README.md`](sim/README.md). |
 
 `bin/socket` tager valgfrie flag, hvis standardværdierne (`localhost:1234`, `./bin/animations`) ikke passer:
 

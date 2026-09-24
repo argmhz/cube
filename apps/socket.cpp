@@ -9,6 +9,7 @@
 #include "../lib/net/CommandHandler.h"
 #include "../lib/net/AnimationCommandHandler.h"
 #include "../lib/net/ConnectionLoop.h"
+#include "../lib/net/FrameStream.h"
 #include "../lib/Log.h"
 #include "../lib/net/Config.h"
 #include "../animations/Text.cpp"
@@ -76,6 +77,14 @@ int main(int argc, char *argv[]){
   // Start cube
   std::thread cubeThread = cube->start();
   std::thread incomingThread([&config]{ incoming(config); });
+
+  // Off unless --stream-port is given: only `make sim-socket` runs with it,
+  // to let sim/viewer watch the cube live on a machine that has no LEDs.
+  if (!config.streamPort.empty()) {
+    std::thread([&config]{
+      runFrameStream(*cube, config.host, config.streamPort, config.streamFps);
+    }).detach();
+  }
 
 
   Text *t = new Text;

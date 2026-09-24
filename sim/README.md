@@ -42,8 +42,46 @@ node sim/viewer/server.js
 
 `sim/viewer/` er en helt selvstændig, offline-kørende side — ingen `npm install`, ingen forbindelse til Claude eller internettet nødvendig (Three.js ligger vendoret i `sim/viewer/public/vendor/`). Et andet portnummer kan gives som argument: `node sim/viewer/server.js 3000`.
 
+## Live: hele stakken uden en Pi
+
+Optagelsen ovenfor kører én animation isoleret. Skal hele kæden afprøves --
+browser, `cube-client`, socket-serveren og animationen -- bygger `make sim`
+også `bin/sim-socket`: den rigtige, uændrede `apps/socket.cpp` bygget mod den
+falske `bcm2835`.
+
+**1. Start serveren** (den lytter på TCP 1234 præcis som på Pi'en, og sender
+samtidig hvert frame videre til viewerens live-feed):
+
+```bash
+./bin/sim-socket --animations-dir ./bin/sim-animations --stream-port 8421
+```
+
+**2. Start vieweren** og klik **Live** i stedet for "Indlæs .jsonl":
+
+```bash
+node sim/viewer/server.js
+```
+
+**3. Start `cube-client`** i det andet repo og åbn `http://localhost:3000`:
+
+```bash
+npm install && node index.js
+```
+
+Vælg en animation i dropdownen, og den skifter i vieweren. Vælges `Spectrum`,
+dukker et mikrofonkort op: slå det til, og browserens FFT streamer fire
+frekvensbånd til kuben ~30 gange i sekundet.
+
+`--stream-port` er slået fra som standard, så Pi'en hverken lytter eller
+serialiserer et eneste frame. Frame-strømmen læser kun voxel-bufferen og kan
+derfor ikke forstyrre det animationen tegner.
+
+> Skift af animation kan tage op til ~8 sekunder første gang: opstarts-`Text`
+> (den der viser IP'en) tjekker først `isRunning()` igen, når hele teksten er
+> rullet færdig.
+
 ## Begrænsninger
 
-- Kun til at *se* en animation — den fysiske kube, `apps/socket.cpp` og `cube-client` er slet ikke involveret.
+- `bin/simulator` er kun til at *se* en animation — den fysiske kube, `apps/socket.cpp` og `cube-client` er slet ikke involveret. (Det er netop det `bin/sim-socket` ovenfor råder bod på.)
 - `Cube::run()`s render-tråd spinner så hurtigt den kan (ingen rigtig SPI-hastighed at vente på), og bruger derfor en hel CPU-kerne mens simulatoren kører. Fint til korte optagelser, ikke tænkt til at køre i timevis.
 - `bin/sim-animations/*.so` er bygget til din maskine (x86), ikke til Pi'en — bland dem aldrig sammen med de rigtige `.so`-filer i `bin/animations/`.

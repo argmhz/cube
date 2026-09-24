@@ -30,7 +30,7 @@ $(apps):
 # -funsigned-char: plain `char` defaults to unsigned on ARM (the Pi) but
 # signed on x86 -- lib/core/Cube.h relies on the unsigned default (e.g.
 # `char layers[8] = {128,...}`), so we ask for it explicitly here.
-sim: $(addprefix sim-,$(animations)) bin/simulator
+sim: $(addprefix sim-,$(animations)) bin/simulator bin/sim-socket
 
 sim-%:
 	mkdir -p bin/sim-animations
@@ -39,6 +39,22 @@ sim-%:
 bin/simulator: sim/simulator.cpp
 	mkdir -p bin
 	g++ -W -o bin/simulator sim/simulator.cpp $(CUBE_SRC) sim/fake_bcm2835/fake_bcm2835.cpp -Isim/fake_bcm2835 -funsigned-char -ldl -pthread -std=c++17 -lstdc++fs
+
+# The whole stack on a normal machine: the real, unmodified apps/socket.cpp
+# built against the fake bcm2835, so cube-client can drive it over TCP 1234
+# exactly as it drives the Pi, while --stream-port feeds sim/viewer a live
+# picture of the cube. Run it with:
+#
+#   ./bin/sim-socket --animations-dir ./bin/sim-animations --stream-port 8421
+#
+# (An explicit rule beats the sim-% pattern rule above, so this target
+# builds the server rather than being mistaken for an animation named
+# "socket".)
+sim-socket: bin/sim-socket $(addprefix sim-,$(animations))
+
+bin/sim-socket: apps/socket.cpp $(CUBE_SRC) lib/net/Socket.cpp sim/fake_bcm2835/fake_bcm2835.cpp
+	mkdir -p bin
+	g++ -W -o bin/sim-socket apps/socket.cpp $(CUBE_SRC) lib/net/Socket.cpp sim/fake_bcm2835/fake_bcm2835.cpp -Isim/fake_bcm2835 -funsigned-char -ldl -pthread -std=c++17 -lstdc++fs
 
 testPaths = $(wildcard tests/*.cpp)
 
