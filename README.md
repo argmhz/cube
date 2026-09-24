@@ -60,6 +60,36 @@ Fysisk LED-kube
 
 Hvorfor `lib/core/CubeBuffer` og `lib/net/Socket` har både en `.h` og en `.cpp`, mens resten af `lib/` kun har `.h`-filer: se [ARCHITECTURE.md](ARCHITECTURE.md#header-cpp-organisering).
 
+## Bit-angle modulation (BAM)
+
+En LED kan kun være helt tændt eller helt slukket — der er ingen analog dæmpning. `Cube::run()` (`lib/core/Cube.h`) skaber alligevel 16 lysstyrkeniveauer pr. farvekanal ved at blinke hver LED så hurtigt, at øjet ikke kan følge med, og styre *hvor længe* den er tændt inden for hvert blink.
+
+`cube->set(x, y, z, r, g, b)` tager `r`/`g`/`b` som tal 0-15 — altså 4 bits pr. farve. `createFrame()` splitter det tal op i sine fire enkelte bits ("bit-planer"). Værdien 7 (`0111`) bliver til:
+
+```
+bit 0 (vægt 1): tændt
+bit 1 (vægt 2): tændt
+bit 2 (vægt 4): tændt
+bit 3 (vægt 8): slukket
+```
+
+I `run()`'s render-løkke løber en tæller (`bam_counter`) fra 0 til 14 — 15 tidsslots i alt — og de fire bit-planer vises ikke lige længe:
+
+| bit-plan | vægt | tidsslots |
+|---|---|---|
+| bit 0 | 1 | 1 |
+| bit 1 | 2 | 2 |
+| bit 2 | 4 | 4 |
+| bit 3 | 8 | 8 |
+
+*(1+2+4+8 = 15, det samlede antal tidsslots.)*
+
+En pixel med værdien 7 er tændt i de slots hvor bit 0, 1 og 2 vises (1+2+4 = 7 af de 15 slots) og slukket når bit 3 vises (8 slots) — øjet ser den som "styrke 7 ud af 15". Det er derfor det hedder bit-**angle**-modulation: hvert bit i det binære tal får sin egen "vinkel" (tidsandel) af cyklussen, dobbelt så meget som det forrige.
+
+Fordelen frem for bare at tælle lige langsomt op til 15: hardwaren skal kun opdateres 4 gange (én gang pr. bit-plan) for at nå 16 niveauer, i stedet for 15 gange — vigtigt når SPI-bussen i forvejen skal nå 512 voxels × 3 farver × 8 lag mange gange i sekundet.
+
+Selve laget vælges også ved multipleksning: kuben har kun ledninger til at styre ét Y-lag ad gangen (`layers[8] = {128,64,32,16,8,4,2,1}` vælger ét lag via GPIO). Så for hvert af de 15 tidsslots løbes alle 8 lag igennem, og hvert lag får sin egen 4-bit-plan sendt over SPI — hele cyklussen sker så hurtigt, at man hverken ser lag-skiftet eller blinket, kun den samlede, jævnt dæmpede farve.
+
 ## Hardware & afhængigheder
 
 - Raspberry Pi med SPI aktiveret, forbundet til skiftregistrene der driver kuben (lag-select på GPIO `P1_11`/latch og `P1_15`/output-enable, se `Cube::initBcm2835`).
