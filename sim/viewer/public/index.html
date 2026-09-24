@@ -349,6 +349,7 @@
         <div class="source-meta" id="sourceMeta">&mdash;</div>
         <div class="file-row">
           <button class="primary" id="loadBtn" style="flex:1">Indlæs .jsonl</button>
+          <button id="liveBtn" style="flex:1">Live</button>
           <input type="file" id="fileInput" accept=".jsonl,.json,.txt">
         </div>
       </div>
@@ -548,6 +549,7 @@
   const sourceName = document.getElementById("sourceName");
   const sourceMeta = document.getElementById("sourceMeta");
   const liveBadgeText = document.getElementById("liveBadgeText");
+  const liveBtn = document.getElementById("liveBtn");
 
   let frames = [];
   let playing = true;
@@ -564,6 +566,7 @@
   }
 
   function loadFrames(list, label) {
+    stopLive();
     frames = list;
     frameIndex = 0;
     scrub.max = Math.max(0, frames.length - 1);
@@ -641,6 +644,93 @@
       }
     };
     reader.readAsText(file);
+  });
+
+  // ---------- live mode ----------
+  //
+  // Frames arrive from bin/sim-socket over the /live SSE bridge in
+  // server.js. There is no recording to scrub through, so playback is
+  // stopped and each frame is drawn as it lands.
+
+  let live = null;
+  let liveFrames = 0;
+  let liveStart = null;
+
+  function stopLive() {
+    if (live) {
+      live.close();
+      live = null;
+    }
+    liveBtn.textContent = "Live";
+    liveBtn.classList.remove("primary");
+    scrub.disabled = false;
+  }
+
+  function startLive() {
+    stopLive();
+    frames = [];
+    playing = false;
+    setPlayIcon();
+    scrub.disabled = true;
+    scrub.max = 0;
+    liveFrames = 0;
+    liveStart = null;
+    timeTotal.textContent = "&mdash;";
+    fpsValueEl.textContent = "&mdash;";
+    setSource("Live fra sim-socket", "venter på frames …");
+    liveBadgeText.textContent = "Live";
+    liveBtn.textContent = "Stop live";
+    liveBtn.classList.add("primary");
+
+    live = new EventSource("/live");
+
+    // Nothing listening on the stream port is the ordinary case, not a
+    // crash: say what to start rather than failing silently.
+    live.addEventListener("offline", (event) => {
+      let detail = "";
+      try {
+        detail = JSON.parse(event.data).message;
+      } catch (err) {
+        detail = "ukendt fejl";
+      }
+      setSource("Ingen live-feed", "Kører bin/sim-socket med --stream-port? (" + detail + ")");
+      stopLive();
+    });
+
+    live.onmessage = (event) => {
+      let frame;
+      try {
+        frame = JSON.parse(event.data);
+      } catch (err) {
+        return;
+      }
+
+      if (liveStart === null) {
+        liveStart = frame.t;
+        setSource("Live fra sim-socket", "streamer nu");
+      }
+      liveFrames++;
+
+      applyFrame(frame.voxels);
+      timeNow.textContent = fmtTime(frame.t - liveStart);
+      frameCountEl.textContent = "frame " + liveFrames;
+      const lit = frame.voxels.reduce((n, v) => n + ((v[0] || v[1] || v[2]) ? 1 : 0), 0);
+      litCountEl.textContent = lit;
+
+      const elapsed = frame.t - liveStart;
+      if (elapsed > 0) {
+        fpsValueEl.textContent = "~" + Math.round((liveFrames - 1) / (elapsed / 1000)) + " fps";
+      }
+    };
+  }
+
+  liveBtn.addEventListener("click", () => {
+    if (live) {
+      stopLive();
+      setSource("Live stoppet", "Indlæs en .jsonl eller start live igen");
+    } else {
+      startLive();
+    }
   });
 
   // playback clock, paced by each frame's own recorded timestamp

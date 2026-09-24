@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -9,10 +10,14 @@ struct Config {
   std::string host = "localhost";
   std::string port = "1234";
   std::string animationsDir = "./bin/animations";
+  // Empty means the live frame stream is off, which is the default and what
+  // the Pi runs -- see lib/net/FrameStream.h.
+  std::string streamPort = "";
+  int streamFps = 30;
 };
 
-// Parses --host/--port/--animations-dir (each takes one value). Deliberately
-// simple: unknown flags are ignored, and a flag with no following value is
+// Parses --host/--port/--animations-dir/--stream-port/--stream-fps (each
+// takes one value). Deliberately simple: unknown flags are ignored, and a flag with no following value is
 // ignored rather than crashing -- not a full CLI parser, just enough to get
 // the previously-hardcoded values out of the source.
 inline Config parseArgs(const std::vector<std::string> &args) {
@@ -24,6 +29,13 @@ inline Config parseArgs(const std::vector<std::string> &args) {
       config.port = args[++i];
     } else if (args[i] == "--animations-dir" && i + 1 < args.size()) {
       config.animationsDir = args[++i];
+    } else if (args[i] == "--stream-port" && i + 1 < args.size()) {
+      config.streamPort = args[++i];
+    } else if (args[i] == "--stream-fps" && i + 1 < args.size()) {
+      int value = std::atoi(args[++i].c_str());
+      if (value > 0) {
+        config.streamFps = value;
+      }
     }
   }
   return config;
