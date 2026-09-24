@@ -6,12 +6,13 @@
 #include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
 
-// A stylized, low-res take on the Monster Energy claw logo: three tapered
-// claw marks, tallest at the outer edges with a dip in the middle so the
-// negative space still reads as an "M". Drawn as an 8x8 bitmap on a thin
-// billboard that spins around the cube's vertical axis -- the same
-// per-voxel "sampled sign" technique Ticker.cpp uses for its BILLBOARD
-// mode, just without the scroll/text layout machinery.
+// A stylized, low-res take on the Monster Energy claw logo: two full-height
+// legs with a shallow claw-mark "V" slashed into the top between them,
+// rather than a literal full-height letter M -- the negative space below
+// the V stays open, same as the real logo's short middle claw. Drawn as an
+// 8x8 bitmap on a thin billboard that spins around the cube's vertical
+// axis -- the same per-voxel "sampled sign" technique Ticker.cpp uses for
+// its BILLBOARD mode, just without the scroll/text layout machinery.
 class Moner : public Animation {
   static constexpr float THICKNESS = 1.6f;
   static constexpr float SPIN = 0.35f;
@@ -19,14 +20,14 @@ class Moner : public Animation {
 
   // [y][x], y=0 is the bottom row, x=0 is the left column.
   static constexpr std::array<std::array<int, 8>, 8> LOGO = {{
+    {1, 1, 0, 0, 0, 0, 1, 1},
+    {1, 1, 0, 0, 0, 0, 1, 1},
+    {1, 1, 0, 0, 0, 0, 1, 1},
+    {1, 1, 0, 0, 0, 0, 1, 1},
     {1, 1, 0, 1, 1, 0, 1, 1},
     {1, 1, 0, 1, 1, 0, 1, 1},
-    {1, 1, 0, 1, 1, 0, 1, 1},
-    {1, 0, 0, 1, 1, 0, 1, 0},
-    {1, 0, 0, 1, 1, 0, 1, 0},
-    {1, 0, 0, 1, 0, 0, 1, 0},
-    {1, 0, 0, 0, 0, 0, 1, 0},
-    {1, 0, 0, 0, 0, 0, 1, 0},
+    {1, 1, 1, 0, 0, 1, 1, 1},
+    {1, 1, 1, 0, 0, 1, 1, 1},
   }};
 
   void draw(Cube *cube) override {
