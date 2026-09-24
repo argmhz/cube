@@ -5,6 +5,9 @@
 #include "../lib/core/Cube.h"
 #include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
+#include "../lib/vendor/json.hpp"
+
+using json = nlohmann::json;
 
 // A small product-reveal loop: the Monster Energy claw logo sits up front
 // as a flat sign, slides back into the cube, and then a plain white can
@@ -21,7 +24,22 @@ class Moner : public Animation {
   static constexpr float CAN_MAX_HEIGHT = 7.3f;
   static constexpr float CAN_RATE = 0.07f;
   static constexpr int HOLD_FRAMES = 90;
-  static constexpr int SPEED = 45000;
+
+  // Mutated live from cube-client, same conventions as Beer.cpp: speed is
+  // the per-frame usleep (lower = faster), and revealRequested is a
+  // one-shot flag set by the "Reveal" button and consumed by draw() on its
+  // next loop.
+  int speed = 45000;
+  bool revealRequested = false;
+
+  void onDataUpdate(json data) override {
+    if (data["speed"].is_number()) {
+      speed = std::clamp(data["speed"].get<int>(), 10000, 150000);
+    }
+    if (data["reveal"].is_number()) {
+      revealRequested = true;
+    }
+  }
 
   // [y][x], y=0 is the bottom row, x=0 is the left column.
   static constexpr std::array<std::array<int, 8>, 8> LOGO = {{
@@ -49,6 +67,17 @@ class Moner : public Animation {
     Cube::Color previous[8][8][8] = {};
 
     while (isRunning()) {
+      // A press skips straight to the can rising -- only meaningful while
+      // the logo is still out front or on its way back, since RISE/HOLD/
+      // FALL are already mid-reveal.
+      if (revealRequested) {
+        revealRequested = false;
+        if (phase == RECEDE || phase == RETURN) {
+          logoZ = BACK_Z;
+          phase = RISE;
+        }
+      }
+
       switch (phase) {
         case RECEDE:
           logoZ += SLIDE_RATE;
@@ -128,7 +157,7 @@ class Moner : public Animation {
       }
 
       cube->update();
-      usleep(SPEED);
+      usleep(speed);
     }
   }
 };
