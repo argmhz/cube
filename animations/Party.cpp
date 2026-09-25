@@ -1,5 +1,5 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
 
 class Party : public Animation {
@@ -26,10 +26,6 @@ class Party : public Animation {
       usleep(100000);
     }
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 extern "C" Animation * create() {
     return new Party;

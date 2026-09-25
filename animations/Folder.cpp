@@ -1,5 +1,5 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
 #include <stdlib.h>
 
@@ -28,6 +28,7 @@ class Folder: public Animation {
     for (xx = 0; xx < 8; xx++) {
       oldpullback[xx] = 0;
       pullback[xx] = 0;
+      LED_Old[xx] = 0;
     }
 
     while (isRunning()) {
@@ -517,10 +518,6 @@ class Folder: public Animation {
 
     c -> clear();
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 
 extern "C"

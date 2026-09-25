@@ -1,5 +1,5 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
 
 class Sine : public Animation {
@@ -41,10 +41,6 @@ class Sine : public Animation {
       }
     }
   }
-
-  // void onDataUpdate(std::vector<std::string> data){
-  //
-  // }
 };
 extern "C" Animation * create() {
     return new Sine;

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "../lib/Cube.cpp"
+#include "../lib/core/Cube.h"
 #include "../lib/helpers.h"
 
 

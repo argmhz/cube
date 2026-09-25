@@ -1,96 +1,113 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
+#include "../lib/vendor/json.hpp"
 
+#include <cmath>
+
+using json = nlohmann::json;
 
 class Fireworks : public Animation {
+  static const int MAX_PARTICLES = 24;
 
-  void draw(Cube *c) {
+  int speed = 10000;
+  int numParticles = 7;
 
-    c->clear();
-    int n = 7;
-    int _delay = 10000;
-    int i,f,e;
+  // Compact HSV-to-RGB, saturation fixed at 100%, brightness a native
+  // 0..15 BAM level (same approach as Nebula.cpp's rainbow()) -- gives each
+  // burst its own randomly-picked colour instead of always plain white.
+  static Cube::Color rainbow(float hue, int brightness) {
+    hue -= std::floor(hue);
+    hue *= 6.0f;
+    const int sector = static_cast<int>(std::floor(hue));
+    const float fraction = hue - sector;
+    const int rising = static_cast<int>(std::round(brightness * fraction));
+    const int falling = brightness - rising;
 
-    float origin_x = 3;
-    float origin_y = 3;
-    float origin_z = 3;
-
-    int rand_y, rand_x, rand_z;
-
-    float slowrate, gravity;
-
-    // Particles and their position, x,y,z and their movement, dx, dy, dz
-    float particles[n][6];
-
-    while(isRunning()){
-
-        origin_x = rand()%4;
-        origin_y = rand()%4;
-        origin_z = rand()%2;
-        origin_z +=5;
-        origin_x +=2;
-        origin_y +=2;
-
-        // shoot a particle up in the air
-        for (e=0;e<origin_z;e++)
-        {
-            c->set(origin_x,origin_y,e,0,0,15);
-            c->update();
-            usleep(600+500*e);
-            c->clear();
-        }
-
-        // Fill particle array
-        for (f=0; f<n; f++)
-        {
-            // Position
-            particles[f][0] = origin_x;
-            particles[f][1] = origin_y;
-            particles[f][2] = origin_z;
-
-            rand_x = rand()%200;
-            rand_y = rand()%200;
-            rand_z = rand()%200;
-
-            // Movement
-            particles[f][3] = 1-(float)rand_x/100; // dx
-            particles[f][4] = 1-(float)rand_y/100; // dy
-            particles[f][5] = 1-(float)rand_z/100; // dz
-        }
-
-        // explode
-        for (e=0; e<25; e++)
-        {
-            slowrate = 1+tan((e+0.1)/20)*10;
-
-            gravity = tan((e+0.1)/20)/2;
-
-            for (f=0; f<n; f++)
-            {
-                particles[f][0] += particles[f][3]/slowrate;
-                particles[f][1] += particles[f][4]/slowrate;
-                particles[f][2] += particles[f][5]/slowrate;
-                particles[f][2] -= gravity;
-
-                c->set(particles[f][0],particles[f][1],particles[f][2],15,15,15);
-                c->update();
-            }
-
-            usleep(_delay);
-            c->clear();
-        }
-
+    switch (sector % 6) {
+      case 0: return {brightness, rising, 0};
+      case 1: return {falling, brightness, 0};
+      case 2: return {0, brightness, rising};
+      case 3: return {0, falling, brightness};
+      case 4: return {rising, 0, brightness};
+      default: return {brightness, 0, falling};
     }
   }
 
+  void onDataUpdate(json data) override {
+    if (data["speed"].is_number()) {
+      int value = data["speed"].get<int>();
+      if (value > 0) {
+        speed = value;
+      }
+    }
+    if (data["particles"].is_number()) {
+      int value = data["particles"].get<int>();
+      // particles sizes a stack array each launch -- keep it within sane
+      // bounds instead of trusting a network client not to send 0/negative
+      // (undefined behaviour) or something huge (stack overflow).
+      if (value > 0 && value <= MAX_PARTICLES) {
+        numParticles = value;
+      }
+    }
+  }
 
+  void draw(Cube *c) override {
+    while (isRunning()) {
+      // Y is the cube's vertical axis (same as Rain's drops and
+      // UpdownColor's columns), so that is the one the rocket climbs and
+      // the one gravity pulls the sparks back down.
+      float originX = 2 + rand() % 4;
+      float originY = 5 + rand() % 2;
+      float originZ = 2 + rand() % 4;
+
+      Cube::Color color = rainbow(static_cast<float>(rand() % 360) / 360.0f, MAX_COLOR);
+
+      // Ascend: a single spark climbs from the floor to the burst height.
+      for (int y = 0; y < originY; y++) {
+        c->clear();
+        c->set(originX, y, originZ, color);
+        c->update();
+        usleep(600 + 500 * y);
+      }
+
+      // Burst: numParticles sparks fly outward from the origin and fall
+      // under gravity. The tan() ramp keeps the burst tight for the first
+      // few frames and lets it drift apart and drop faster as it ages.
+      float particles[MAX_PARTICLES][6];
+      for (int i = 0; i < numParticles; i++) {
+        particles[i][0] = originX;
+        particles[i][1] = originY;
+        particles[i][2] = originZ;
+        particles[i][3] = 1 - (rand() % 200) / 100.0f;
+        particles[i][4] = 1 - (rand() % 200) / 100.0f;
+        particles[i][5] = 1 - (rand() % 200) / 100.0f;
+      }
+
+      for (int frame = 0; frame < 25; frame++) {
+        float slowrate = 1 + tan((frame + 0.1f) / 20) * 10;
+        float gravity = tan((frame + 0.1f) / 20) / 2;
+
+        c->clear();
+        for (int i = 0; i < numParticles; i++) {
+          particles[i][0] += particles[i][3] / slowrate;
+          particles[i][1] += particles[i][4] / slowrate;
+          particles[i][2] += particles[i][5] / slowrate;
+          particles[i][1] -= gravity;
+
+          c->set(particles[i][0], particles[i][1], particles[i][2], color);
+        }
+        c->update();
+        usleep(speed);
+      }
+    }
+  }
 };
 
-extern "C" Animation * create() {
-    return new Fireworks;
+extern "C" Animation *create() {
+  return new Fireworks;
 }
 
-extern "C" void destroy(Animation * p) {
-    delete p;
+extern "C" void destroy(Animation *p) {
+  delete p;
 }
