@@ -3,9 +3,9 @@
 #include <cstring>
 #include <vector>
 
-#include "../lib/Cube.cpp"
+#include "../lib/core/Cube.h"
 #include "../lib/helpers.h"
-#include "../lib/Font.cpp"
+#include "../lib/animation/Font.h"
 
 Cube * cube = new Cube;
 int r,g,b;

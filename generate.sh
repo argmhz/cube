@@ -13,8 +13,8 @@ fi
 echo "generating $1"
 
 echo '
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
 
 class '$1' : public Animation {

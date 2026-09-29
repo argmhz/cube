@@ -1,128 +1,118 @@
-#include "../lib/Cube.cpp"
-#include "../lib/Animation.hpp"
+#include "../lib/core/Cube.h"
+#include "../lib/animation/Animation.h"
 #include "../lib/helpers.h"
+#include "../lib/vendor/json.hpp"
 
+#include <algorithm>
 
+using json = nlohmann::json;
+
+// Nested square rings, one per shell of the cube. Each ring's position
+// along x bounces between the two walls a step at a time, and since the
+// rings start staggered they ripple through each other rather than moving
+// as one. The colour changes every time the outermost ring reaches the far
+// wall.
 class SinewaveTwo : public Animation {
+  // The original slept 8000us eight times per frame -- once per iteration
+  // of the loop that copied the ring positions -- so this keeps the same
+  // ~15fps pace now that the frame sleeps once.
+  int speed = 64000;
+  int shells = 4;
 
-  void draw(Cube *c) {
+  int wave[8] = {};
+  int direction[8] = {};
+  int previous[8] = {};
 
-    int sinewavearray[8], addr, sinemult[8], colselect, rr=0, gg=0, bb=15, addrt;
-    int sinewavearrayOLD[8], select, subZ=-7, subT=7, multi=0;//random(-1, 2);
-    sinewavearray[0]=0;
-    sinemult[0]=1;
-     sinewavearray[1]=1;
-    sinemult[1]=1;
-      sinewavearray[2]=2;
-    sinemult[2]=1;
-      sinewavearray[3]=3;
-    sinemult[3]=1;
-      sinewavearray[4]=4;
-    sinemult[4]=1;
-      sinewavearray[5]=5;
-    sinemult[5]=1;
-      sinewavearray[6]=6;
-    sinemult[6]=1;
-      sinewavearray[7]=7;
-    sinemult[7]=1;
-
-while(isRunning()){
-  for(addr=0; addr<8; addr++){
-    if(sinewavearray[addr]==7){
-    sinemult[addr]=-1;
+  void onDataUpdate(json data) override {
+    if (data["speed"].is_number()) {
+      int value = data["speed"].get<int>();
+      if (value > 0) {
+        speed = value;
+      }
     }
-    if(sinewavearray[addr]==0){
-    sinemult[addr]=1;
+    if (data["shells"].is_number()) {
+      shells = std::clamp(data["shells"].get<int>(), 1, 4);
     }
-    sinewavearray[addr] = sinewavearray[addr] + sinemult[addr];
-  }//addr
-   if(sinewavearray[0]==7){
-   select=random(3);
-  if(select==0){
-    rr=random(1, 16);
-    gg=random(1, 16);
-    bb=0;}
-   if(select==1){
-    rr=random(1, 16);
-    gg=0;
-    bb=random(1, 16);}
-   if(select==2){
-    rr=0;
-    gg=random(1, 16);
-    bb=random(1, 16);}
- /*
-if(multi==1)
-multi=0;
-else
-multi=1;
-*/
+  }
 
-}
+  // One ring, `depth` layers in from the cube's surface: four runs of
+  // voxels that meet at the corners to close the square. Clears where the
+  // ring was last frame before drawing where it is now.
+  void drawShell(Cube *c, int depth, int red, int green, int blue) {
+    for (int addr = depth; addr <= 7 - depth; addr++) {
+      const int was = previous[addr];
+      c->set(was, addr, depth, 0, 0, 0);
+      c->set(was, depth, addr, 0, 0, 0);
+      c->set(was, 7 - addr, 7 - depth, 0, 0, 0);
+      c->set(was, 7 - depth, 7 - addr, 0, 0, 0);
 
+      const int now = wave[addr];
+      c->set(now, addr, depth, red, green, blue);
+      c->set(now, depth, addr, red, green, blue);
+      c->set(now, 7 - addr, 7 - depth, red, green, blue);
+      c->set(now, 7 - depth, 7 - addr, red, green, blue);
+    }
+  }
 
+  void draw(Cube *c) override {
+    int red = 0;
+    int green = 0;
+    int blue = 15;
 
-    for(addr=0; addr<8; addr++){
-  c->set(sinewavearrayOLD[addr], addr, 0, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr], 0, addr, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr], subT-addr, 7, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr], 7, subT-addr, 0, 0, 0);
- c->set(sinewavearray[addr], addr, 0, rr, gg, bb);
- c->set(sinewavearray[addr], 0, addr, rr, gg, bb);
- c->set(sinewavearray[addr], subT-addr,7, rr, gg, bb);
- c->set(sinewavearray[addr], 7, subT-addr, rr, gg, bb);
-  }//}
+    for (int i = 0; i < 8; i++) {
+      wave[i] = i;
+      direction[i] = 1;
+      // Seeded to match wave[] rather than left uninitialised: the first
+      // frame clears "where the ring was" before anything has been drawn
+      // there, and used to read whatever happened to be on the stack.
+      previous[i] = i;
+    }
 
-     for(addr=1; addr<7; addr++){
-  c->set(sinewavearrayOLD[addr+multi*1], addr, 1, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*1], 1, addr, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*1], subT-addr, 6, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*1], 6, subT-addr, 0, 0, 0);
- c->set(sinewavearray[addr+multi*1], addr, 1, rr, gg, bb);
- c->set(sinewavearray[addr+multi*1], 1, addr, rr, gg, bb);
- c->set(sinewavearray[addr+multi*1], subT-addr,6, rr, gg, bb);
- c->set(sinewavearray[addr+multi*1], 6, subT-addr, rr, gg, bb);
-     }
+    while (isRunning()) {
+      for (int i = 0; i < 8; i++) {
+        if (wave[i] == 7) {
+          direction[i] = -1;
+        }
+        if (wave[i] == 0) {
+          direction[i] = 1;
+        }
+        wave[i] += direction[i];
+      }
 
-      for(addr=2; addr<6; addr++){
-  c->set(sinewavearrayOLD[addr+multi*2], addr, 2, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*2], 2, addr, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*2], subT-addr, 5, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*2], 5, subT-addr, 0, 0, 0);
- c->set(sinewavearray[addr+multi*2], addr, 2, rr, gg, bb);
- c->set(sinewavearray[addr+multi*2], 2, addr, rr, gg, bb);
- c->set(sinewavearray[addr+multi*2], subT-addr,5, rr, gg, bb);
- c->set(sinewavearray[addr+multi*2], 5, subT-addr, rr, gg, bb);
-     }
-           for(addr=3; addr<5; addr++){
-  c->set(sinewavearrayOLD[addr+multi*3], addr, 3, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*3], 3, addr, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*3], subT-addr, 4, 0, 0, 0);
-  c->set(sinewavearrayOLD[addr+multi*3], 4, subT-addr, 0, 0, 0);
- c->set(sinewavearray[addr+multi*3], addr, 3, rr, gg, bb);
- c->set(sinewavearray[addr+multi*3], 3, addr, rr, gg, bb);
- c->set(sinewavearray[addr+multi*3], subT-addr,4, rr, gg, bb);
- c->set(sinewavearray[addr+multi*3], 4, subT-addr, rr, gg, bb);
-     }
+      // Two random channels lit and the third off, so the new colour is
+      // always a vivid mix rather than an occasional muddy grey.
+      if (wave[0] == 7) {
+        switch (random(3)) {
+          case 0:
+            red = random(1, 16); green = random(1, 16); blue = 0;
+            break;
+          case 1:
+            red = random(1, 16); green = 0; blue = random(1, 16);
+            break;
+          default:
+            red = 0; green = random(1, 16); blue = random(1, 16);
+            break;
+        }
+      }
 
-   for(addr=0; addr<8; addr++){
-     sinewavearrayOLD[addr]=sinewavearray[addr];
+      for (int depth = 0; depth < shells; depth++) {
+        drawShell(c, depth, red, green, blue);
+      }
+
+      for (int i = 0; i < 8; i++) {
+        previous[i] = wave[i];
+      }
+
       c->update();
-      usleep(8000);
-
-   }
-
-
-
-}//while
-  c->clear();
-
+      usleep(speed);
+    }
   }
 };
 
-extern "C" Animation * create() {
-    return new SinewaveTwo;
+extern "C" Animation *create() {
+  return new SinewaveTwo;
 }
 
-extern "C" void destroy(Animation * p) {
-    delete p;
+extern "C" void destroy(Animation *p) {
+  delete p;
 }

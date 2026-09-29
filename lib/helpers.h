@@ -5,31 +5,32 @@
 #include <time.h>
 #include <math.h>
 #include <vector>
+#include "core/CubeBuffer.h"
 
 #define PI 3.14159265
 
 
-int random(int min, int max) {
-  return rand() % max + min;
+inline int random(int min, int max) {
+  return rand() % (max - min) + min;
 }
 
-int random(int max) {
+inline int random(int max) {
   return random(0,max);
 }
 
-double dmap(double in, double inMin, double inMax, double outMin, double outMax){
+inline double dmap(double in, double inMin, double inMax, double outMin, double outMax){
     double out;
     out = (in-inMin)/(inMax-inMin)*(outMax-outMin) + outMin;
     return out;
 }
 
-long map(long x, long in_min, long in_max, long out_min, long out_max)
+inline long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-Cube::Color colorConverter(std::string hexValue){
-  Cube::Color rgbColor;
+inline CubeBuffer::Color colorConverter(std::string hexValue){
+  CubeBuffer::Color rgbColor;
   std::sscanf(hexValue.c_str(), "%02x%02x%02x", &rgbColor.red, &rgbColor.green, &rgbColor.blue);
 
   rgbColor.red = map(rgbColor.red,0,255,0,15);
@@ -43,10 +44,10 @@ Cube::Color colorConverter(std::string hexValue){
 /**
  * Creates an voctor with rgb values between the to input colors
 */
-std::vector<Cube::Color> fadeColor( int r1,int g1,int b1,int r2,int g2,int b2,int n_steps = 16) {
+inline std::vector<CubeBuffer::Color> fadeColor( int r1,int g1,int b1,int r2,int g2,int b2,int n_steps = 16) {
 
-    std::vector<Cube::Color>  colors;
-    Cube::Color color;
+    std::vector<CubeBuffer::Color>  colors;
+    CubeBuffer::Color color;
 
     int red_diff   = r2 - r1;
     int green_diff = g2 - g1;
@@ -63,7 +64,7 @@ std::vector<Cube::Color> fadeColor( int r1,int g1,int b1,int r2,int g2,int b2,in
   return colors;
 }
 
-Cube::Color makeColorGradient(int index){
+inline CubeBuffer::Color makeColorGradient(int index){
 
     float frequency1 = .1;
     float frequency2 = .1;
@@ -76,14 +77,14 @@ Cube::Color makeColorGradient(int index){
     int center = 128;
     int width = 127;
 
-    Cube::Color colors;
+    CubeBuffer::Color colors;
     colors.red = map(sin(frequency1*index + phase1) * width + center,0,255,0,15);
     colors.green = map(sin(frequency2*index + phase2) * width + center,0,255,0,15);
     colors.blue = map(sin(frequency3*index + phase3) * width + center,0,255,0,15);
     return colors;
 }
 
-void init_LUT(unsigned char LUT[65])
+inline void init_LUT(unsigned char LUT[65])
 {
   unsigned char i;
   float sin_of,sine;
@@ -96,7 +97,7 @@ void init_LUT(unsigned char LUT[65])
   }
 }
 
-int totty_sin(unsigned char LUT[65],int sin_of)
+inline int totty_sin(unsigned char LUT[65],int sin_of)
 {
   unsigned char inv=0;
   if (sin_of<0)
@@ -117,7 +118,7 @@ int totty_sin(unsigned char LUT[65],int sin_of)
 }
 
 
-int totty_cos(unsigned char LUT[65],int cos_of)
+inline int totty_cos(unsigned char LUT[65],int cos_of)
 {
 	unsigned char inv=0;
 	cos_of+=32;// Simply rotate by 90 degrees for COS
