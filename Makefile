@@ -47,10 +47,12 @@ bin/simulator: sim/simulator.cpp
 #
 #   ./bin/sim-socket --animations-dir ./bin/sim-animations --stream-port 8421
 #
-# (An explicit rule beats the sim-% pattern rule above, so this target
-# builds the server rather than being mistaken for an animation named
-# "socket".)
+# A rule with no recipe of its own still falls back to a matching pattern
+# rule (sim-% above) for the target itself, not just its prerequisites --
+# so without the no-op recipe below, `make sim-socket` tried to build
+# bin/sim-animations/socket.so from a nonexistent animations/socket.cpp.
 sim-socket: bin/sim-socket $(addprefix sim-,$(animations))
+	@:
 
 bin/sim-socket: apps/socket.cpp $(CUBE_SRC) lib/net/Socket.cpp sim/fake_bcm2835/fake_bcm2835.cpp
 	mkdir -p bin
